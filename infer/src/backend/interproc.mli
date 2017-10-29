@@ -8,12 +8,15 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *)
 
-open! Utils
+open! IStd
 
 (** Interprocedural Analysis *)
 
-(** Perform the analysis of an exe_env *)
-val do_analysis : Exe_env.t -> unit
+val analyze_procedure : Callbacks.proc_callback_t
+(** Run the biabduction analysis on the given procedure *)
 
-(** Print the stats for all the files in the exe_env *)
-val print_stats : Exe_env.t -> unit
+val do_analysis_closures : Exe_env.t -> Tasks.closure list
+(** Create closures to perform the analysis of an exe_env *)
+
+val print_stats : Cluster.t -> unit
+(** Print the stats for all the files in the cluster *)

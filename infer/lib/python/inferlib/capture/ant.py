@@ -5,8 +5,8 @@
 # LICENSE file in the root directory of this source tree. An additional grant
 # of patent rights can be found in the PATENTS file in the same directory.
 
-import os
 import logging
+import os
 
 from . import util
 from inferlib import jwlib
@@ -17,9 +17,12 @@ ant [options] [target]
 
 Analysis examples:
 infer -- ant compile'''
+LANG = ['java']
+
 
 def gen_instance(*args):
     return AntCapture(*args)
+
 
 # This creates an empty argparser for the module, which provides only
 # description/usage information and no arguments.
@@ -60,8 +63,7 @@ class AntCapture:
                 if argument_start_pattern in line:
                     collect = True
                     if javac_arguments != []:
-                        capture = jwlib.create_infer_command(self.args,
-                                                             javac_arguments)
+                        capture = jwlib.create_infer_command(javac_arguments)
                         calls.append(capture)
                         javac_arguments = []
                 if collect:
@@ -71,12 +73,15 @@ class AntCapture:
                         arg = self.remove_quotes(content)
                         javac_arguments.append(arg)
         if javac_arguments != []:
-            capture = jwlib.create_infer_command(self.args, javac_arguments)
+            capture = jwlib.create_infer_command(javac_arguments)
             calls.append(capture)
             javac_arguments = []
         return calls
 
     def capture(self):
-        cmds = self.get_infer_commands(util.get_build_output(self.build_cmd))
-        clean_cmd = '%s clean' % self.build_cmd[0]
+        (code, verbose_out) = util.get_build_output(self.build_cmd)
+        if code != os.EX_OK:
+            return code
+        clean_cmd = '\'{}\' clean'.format(self.build_cmd[0])
+        cmds = self.get_infer_commands(verbose_out)
         return util.run_compilation_commands(cmds, clean_cmd)

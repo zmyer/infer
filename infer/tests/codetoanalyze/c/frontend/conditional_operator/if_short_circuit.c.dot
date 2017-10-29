@@ -1,397 +1,230 @@
+/* @generated */
 digraph iCFG {
-95 [label="95:  BinaryOperatorStmt: Assign \n   n$13=_fun_getenv(\"BLOCK\":char *) [line 47]\n  *&spec:char *=n$13 [line 47]\n  REMOVE_TEMPS(n$13); [line 47]\n " shape="box"]
+"test_loop.254a9d372f8f45542e409771135b9322_1" [label="1: Start test_loop\nFormals: \nLocals:  block_size:char* spec:char* \n   DECLARE_LOCALS(&return,&block_size,&spec); [line 29, column 1]\n " color=yellow style=filled]
 	
 
-	 95 -> 67 ;
-	 95 -> 68 ;
-94 [label="94:  BinaryOperatorStmt: Assign \n   *&block_size:char *=0 [line 53]\n  NULLIFY(&block_size); [line 53]\n  APPLY_ABSTRACTION; [line 53]\n " shape="box"]
+	 "test_loop.254a9d372f8f45542e409771135b9322_1" -> "test_loop.254a9d372f8f45542e409771135b9322_13" ;
+"test_loop.254a9d372f8f45542e409771135b9322_2" [label="2: Exit test_loop \n  " color=yellow style=filled]
 	
 
-	 94 -> 90 ;
-93 [label="93: Prune (false branch) \n   PRUNE(((n$12 == 39) == 0), false); [line 52]\n  REMOVE_TEMPS(n$12); [line 52]\n  APPLY_ABSTRACTION; [line 52]\n " shape="invhouse"]
+"test_loop.254a9d372f8f45542e409771135b9322_3" [label="3: + \n  " ]
 	
 
-	 93 -> 90 ;
-92 [label="92: Prune (true branch) \n   PRUNE(((n$12 == 39) != 0), true); [line 52]\n  REMOVE_TEMPS(n$12); [line 52]\n " shape="invhouse"]
+	 "test_loop.254a9d372f8f45542e409771135b9322_3" -> "test_loop.254a9d372f8f45542e409771135b9322_4" ;
+	 "test_loop.254a9d372f8f45542e409771135b9322_3" -> "test_loop.254a9d372f8f45542e409771135b9322_5" ;
+"test_loop.254a9d372f8f45542e409771135b9322_4" [label="4: Prune (true branch) \n   n$0=*&spec:char* [line 36, column 12]\n  PRUNE(!n$0, true); [line 36, column 12]\n " shape="invhouse"]
 	
 
-	 92 -> 94 ;
-91 [label="91:  BinaryOperatorStmt: EQ \n   n$11=*&spec:char * [line 52]\n  n$12=*n$11:char  [line 52]\n  REMOVE_TEMPS(n$11); [line 52]\n  NULLIFY(&spec); [line 52]\n " shape="box"]
+	 "test_loop.254a9d372f8f45542e409771135b9322_4" -> "test_loop.254a9d372f8f45542e409771135b9322_6" ;
+"test_loop.254a9d372f8f45542e409771135b9322_5" [label="5: Prune (false branch) \n   n$0=*&spec:char* [line 36, column 12]\n  PRUNE(n$0, false); [line 36, column 12]\n " shape="invhouse"]
 	
 
-	 91 -> 92 ;
-	 91 -> 93 ;
-90 [label="90: + \n  " ]
+	 "test_loop.254a9d372f8f45542e409771135b9322_5" -> "test_loop.254a9d372f8f45542e409771135b9322_2" ;
+"test_loop.254a9d372f8f45542e409771135b9322_6" [label="6:  BinaryOperatorStmt: Assign \n   n$1=_fun_getenv(\"BLOCK_SIZE\":char const *) [line 36, column 29]\n  *&spec:char*=n$1 [line 36, column 22]\n  n$2=*&spec:char* [line 36, column 22]\n " shape="box"]
 	
 
-	 90 -> 65 ;
-89 [label="89:  BinaryOperatorStmt: Assign \n   *&block_size:char *=0 [line 50]\n  NULLIFY(&block_size); [line 50]\n  APPLY_ABSTRACTION; [line 50]\n " shape="box"]
+	 "test_loop.254a9d372f8f45542e409771135b9322_6" -> "test_loop.254a9d372f8f45542e409771135b9322_7" ;
+	 "test_loop.254a9d372f8f45542e409771135b9322_6" -> "test_loop.254a9d372f8f45542e409771135b9322_8" ;
+"test_loop.254a9d372f8f45542e409771135b9322_7" [label="7: Prune (true branch) \n   PRUNE(!n$2, true); [line 36, column 22]\n " shape="invhouse"]
 	
 
-	 89 -> 65 ;
-88 [label="88: Prune (false branch) \n   n$10=*&SIL_temp_conditional___n$7:int  [line 49]\n  PRUNE((n$10 == 0), false); [line 49]\n  REMOVE_TEMPS(n$10); [line 49]\n  NULLIFY(&SIL_temp_conditional___n$7); [line 49]\n  APPLY_ABSTRACTION; [line 49]\n " shape="invhouse"]
+	 "test_loop.254a9d372f8f45542e409771135b9322_7" -> "test_loop.254a9d372f8f45542e409771135b9322_9" ;
+"test_loop.254a9d372f8f45542e409771135b9322_8" [label="8: Prune (false branch) \n   PRUNE(n$2, false); [line 36, column 22]\n " shape="invhouse"]
 	
 
-	 88 -> 91 ;
-87 [label="87: Prune (true branch) \n   n$10=*&SIL_temp_conditional___n$7:int  [line 49]\n  PRUNE((n$10 != 0), true); [line 49]\n  REMOVE_TEMPS(n$10); [line 49]\n  NULLIFY(&SIL_temp_conditional___n$7); [line 49]\n  NULLIFY(&spec); [line 49]\n " shape="invhouse"]
+	 "test_loop.254a9d372f8f45542e409771135b9322_8" -> "test_loop.254a9d372f8f45542e409771135b9322_2" ;
+"test_loop.254a9d372f8f45542e409771135b9322_9" [label="9:  BinaryOperatorStmt: Assign \n   n$3=_fun_getenv(\"BLOCKSIZE\":char const *) [line 37, column 20]\n  *&spec:char*=n$3 [line 37, column 13]\n  n$4=*&spec:char* [line 37, column 13]\n " shape="box"]
 	
 
-	 87 -> 89 ;
-86 [label="86:  ConditinalStmt Branch \n   *&SIL_temp_conditional___n$7:int =1 [line 49]\n  APPLY_ABSTRACTION; [line 49]\n " shape="box"]
+	 "test_loop.254a9d372f8f45542e409771135b9322_9" -> "test_loop.254a9d372f8f45542e409771135b9322_10" ;
+	 "test_loop.254a9d372f8f45542e409771135b9322_9" -> "test_loop.254a9d372f8f45542e409771135b9322_11" ;
+"test_loop.254a9d372f8f45542e409771135b9322_10" [label="10: Prune (true branch) \n   PRUNE(!n$4, true); [line 37, column 13]\n " shape="invhouse"]
 	
 
-	 86 -> 81 ;
-85 [label="85:  ConditinalStmt Branch \n   *&SIL_temp_conditional___n$7:int =0 [line 49]\n  APPLY_ABSTRACTION; [line 49]\n " shape="box"]
+	 "test_loop.254a9d372f8f45542e409771135b9322_10" -> "test_loop.254a9d372f8f45542e409771135b9322_12" ;
+"test_loop.254a9d372f8f45542e409771135b9322_11" [label="11: Prune (false branch) \n   PRUNE(n$4, false); [line 37, column 13]\n " shape="invhouse"]
 	
 
-	 85 -> 81 ;
-84 [label="84: Prune (false branch) \n   PRUNE((n$9 == 0), false); [line 49]\n  REMOVE_TEMPS(n$9); [line 49]\n " shape="invhouse"]
+	 "test_loop.254a9d372f8f45542e409771135b9322_11" -> "test_loop.254a9d372f8f45542e409771135b9322_2" ;
+"test_loop.254a9d372f8f45542e409771135b9322_12" [label="12:  BinaryOperatorStmt: Assign \n   *&block_size:char*=null [line 38, column 5]\n " shape="box"]
 	
 
-	 84 -> 86 ;
-83 [label="83: Prune (true branch) \n   PRUNE((n$9 != 0), true); [line 49]\n  REMOVE_TEMPS(n$9); [line 49]\n " shape="invhouse"]
+	 "test_loop.254a9d372f8f45542e409771135b9322_12" -> "test_loop.254a9d372f8f45542e409771135b9322_3" ;
+"test_loop.254a9d372f8f45542e409771135b9322_13" [label="13:  BinaryOperatorStmt: Assign \n   n$5=_fun_getenv(\"BLOCK\":char const *) [line 34, column 10]\n  *&spec:char*=n$5 [line 34, column 3]\n " shape="box"]
 	
 
-	 83 -> 85 ;
-82 [label="82:  BinaryOperatorStmt: Assign \n   n$8=_fun_getenv(\"BLOCKSIZE\":char *) [line 49]\n  *&spec:char *=n$8 [line 49]\n  n$9=*&spec:char * [line 49]\n  REMOVE_TEMPS(n$8); [line 49]\n " shape="box"]
+	 "test_loop.254a9d372f8f45542e409771135b9322_13" -> "test_loop.254a9d372f8f45542e409771135b9322_3" ;
+"main.fad58de7366495db4650cfefac2fcd61_1" [label="1: Start main\nFormals: \nLocals:  block_size:char* spec:char* \n   DECLARE_LOCALS(&return,&block_size,&spec); [line 42, column 1]\n " color=yellow style=filled]
 	
 
-	 82 -> 83 ;
-	 82 -> 84 ;
-81 [label="81: + \n  " ]
+	 "main.fad58de7366495db4650cfefac2fcd61_1" -> "main.fad58de7366495db4650cfefac2fcd61_19" ;
+"main.fad58de7366495db4650cfefac2fcd61_2" [label="2: Exit main \n  " color=yellow style=filled]
 	
 
-	 81 -> 87 ;
-	 81 -> 88 ;
-80 [label="80: Prune (false branch) \n   n$6=*&SIL_temp_conditional___n$3:int  [line 49]\n  PRUNE((n$6 == 0), false); [line 49]\n  REMOVE_TEMPS(n$6); [line 49]\n  NULLIFY(&SIL_temp_conditional___n$3); [line 49]\n  APPLY_ABSTRACTION; [line 49]\n " shape="invhouse"]
+"main.fad58de7366495db4650cfefac2fcd61_3" [label="3:  Return Stmt \n   *&return:int=0 [line 56, column 3]\n " shape="box"]
 	
 
-	 80 -> 91 ;
-79 [label="79: Prune (true branch) \n   n$6=*&SIL_temp_conditional___n$3:int  [line 49]\n  PRUNE((n$6 != 0), true); [line 49]\n  REMOVE_TEMPS(n$6); [line 49]\n  NULLIFY(&SIL_temp_conditional___n$3); [line 49]\n  NULLIFY(&spec); [line 49]\n " shape="invhouse"]
+	 "main.fad58de7366495db4650cfefac2fcd61_3" -> "main.fad58de7366495db4650cfefac2fcd61_2" ;
+"main.fad58de7366495db4650cfefac2fcd61_4" [label="4: + \n  " ]
 	
 
-	 79 -> 82 ;
-78 [label="78:  ConditinalStmt Branch \n   *&SIL_temp_conditional___n$3:int =1 [line 49]\n  APPLY_ABSTRACTION; [line 49]\n " shape="box"]
+	 "main.fad58de7366495db4650cfefac2fcd61_4" -> "main.fad58de7366495db4650cfefac2fcd61_3" ;
+"main.fad58de7366495db4650cfefac2fcd61_5" [label="5: Prune (true branch) \n   n$0=*&spec:char* [line 49, column 8]\n  PRUNE(!n$0, true); [line 49, column 8]\n " shape="invhouse"]
 	
 
-	 78 -> 73 ;
-77 [label="77:  ConditinalStmt Branch \n   *&SIL_temp_conditional___n$3:int =0 [line 49]\n  APPLY_ABSTRACTION; [line 49]\n " shape="box"]
+	 "main.fad58de7366495db4650cfefac2fcd61_5" -> "main.fad58de7366495db4650cfefac2fcd61_7" ;
+"main.fad58de7366495db4650cfefac2fcd61_6" [label="6: Prune (false branch) \n   n$0=*&spec:char* [line 49, column 8]\n  PRUNE(n$0, false); [line 49, column 8]\n " shape="invhouse"]
 	
 
-	 77 -> 73 ;
-76 [label="76: Prune (false branch) \n   PRUNE((n$5 == 0), false); [line 49]\n  REMOVE_TEMPS(n$5); [line 49]\n " shape="invhouse"]
+	 "main.fad58de7366495db4650cfefac2fcd61_6" -> "main.fad58de7366495db4650cfefac2fcd61_15" ;
+"main.fad58de7366495db4650cfefac2fcd61_7" [label="7:  BinaryOperatorStmt: Assign \n   n$1=_fun_getenv(\"BLOCK_SIZE\":char const *) [line 49, column 25]\n  *&spec:char*=n$1 [line 49, column 18]\n  n$2=*&spec:char* [line 49, column 18]\n " shape="box"]
 	
 
-	 76 -> 78 ;
-75 [label="75: Prune (true branch) \n   PRUNE((n$5 != 0), true); [line 49]\n  REMOVE_TEMPS(n$5); [line 49]\n " shape="invhouse"]
+	 "main.fad58de7366495db4650cfefac2fcd61_7" -> "main.fad58de7366495db4650cfefac2fcd61_8" ;
+	 "main.fad58de7366495db4650cfefac2fcd61_7" -> "main.fad58de7366495db4650cfefac2fcd61_9" ;
+"main.fad58de7366495db4650cfefac2fcd61_8" [label="8: Prune (true branch) \n   PRUNE(!n$2, true); [line 49, column 18]\n " shape="invhouse"]
 	
 
-	 75 -> 77 ;
-74 [label="74:  BinaryOperatorStmt: Assign \n   n$4=_fun_getenv(\"BLOCK_SIZE\":char *) [line 49]\n  *&spec:char *=n$4 [line 49]\n  n$5=*&spec:char * [line 49]\n  REMOVE_TEMPS(n$4); [line 49]\n " shape="box"]
+	 "main.fad58de7366495db4650cfefac2fcd61_8" -> "main.fad58de7366495db4650cfefac2fcd61_10" ;
+"main.fad58de7366495db4650cfefac2fcd61_9" [label="9: Prune (false branch) \n   PRUNE(n$2, false); [line 49, column 18]\n " shape="invhouse"]
 	
 
-	 74 -> 75 ;
-	 74 -> 76 ;
-73 [label="73: + \n  " ]
+	 "main.fad58de7366495db4650cfefac2fcd61_9" -> "main.fad58de7366495db4650cfefac2fcd61_15" ;
+"main.fad58de7366495db4650cfefac2fcd61_10" [label="10:  BinaryOperatorStmt: Assign \n   n$3=_fun_getenv(\"BLOCKSIZE\":char const *) [line 49, column 59]\n  *&spec:char*=n$3 [line 49, column 52]\n  n$4=*&spec:char* [line 49, column 52]\n " shape="box"]
 	
 
-	 73 -> 79 ;
-	 73 -> 80 ;
-72 [label="72: Prune (false branch) \n   n$2=*&SIL_temp_conditional___n$0:int  [line 49]\n  PRUNE((n$2 == 0), false); [line 49]\n  REMOVE_TEMPS(n$2); [line 49]\n  NULLIFY(&SIL_temp_conditional___n$0); [line 49]\n  APPLY_ABSTRACTION; [line 49]\n " shape="invhouse"]
+	 "main.fad58de7366495db4650cfefac2fcd61_10" -> "main.fad58de7366495db4650cfefac2fcd61_11" ;
+	 "main.fad58de7366495db4650cfefac2fcd61_10" -> "main.fad58de7366495db4650cfefac2fcd61_12" ;
+"main.fad58de7366495db4650cfefac2fcd61_11" [label="11: Prune (true branch) \n   PRUNE(!n$4, true); [line 49, column 52]\n " shape="invhouse"]
 	
 
-	 72 -> 91 ;
-71 [label="71: Prune (true branch) \n   n$2=*&SIL_temp_conditional___n$0:int  [line 49]\n  PRUNE((n$2 != 0), true); [line 49]\n  REMOVE_TEMPS(n$2); [line 49]\n  NULLIFY(&SIL_temp_conditional___n$0); [line 49]\n  NULLIFY(&spec); [line 49]\n " shape="invhouse"]
+	 "main.fad58de7366495db4650cfefac2fcd61_11" -> "main.fad58de7366495db4650cfefac2fcd61_13" ;
+"main.fad58de7366495db4650cfefac2fcd61_12" [label="12: Prune (false branch) \n   PRUNE(n$4, false); [line 49, column 52]\n " shape="invhouse"]
 	
 
-	 71 -> 74 ;
-70 [label="70:  ConditinalStmt Branch \n   *&SIL_temp_conditional___n$0:int =1 [line 49]\n  APPLY_ABSTRACTION; [line 49]\n " shape="box"]
+	 "main.fad58de7366495db4650cfefac2fcd61_12" -> "main.fad58de7366495db4650cfefac2fcd61_15" ;
+"main.fad58de7366495db4650cfefac2fcd61_13" [label="13:  BinaryOperatorStmt: Assign \n   *&block_size:char*=null [line 50, column 5]\n " shape="box"]
 	
 
-	 70 -> 66 ;
-69 [label="69:  ConditinalStmt Branch \n   *&SIL_temp_conditional___n$0:int =0 [line 49]\n  APPLY_ABSTRACTION; [line 49]\n " shape="box"]
+	 "main.fad58de7366495db4650cfefac2fcd61_13" -> "main.fad58de7366495db4650cfefac2fcd61_4" ;
+"main.fad58de7366495db4650cfefac2fcd61_14" [label="14: + \n  " ]
 	
 
-	 69 -> 66 ;
-68 [label="68: Prune (false branch) \n   n$1=*&spec:char * [line 49]\n  PRUNE((n$1 == 0), false); [line 49]\n  REMOVE_TEMPS(n$1); [line 49]\n " shape="invhouse"]
+	 "main.fad58de7366495db4650cfefac2fcd61_14" -> "main.fad58de7366495db4650cfefac2fcd61_4" ;
+"main.fad58de7366495db4650cfefac2fcd61_15" [label="15:  BinaryOperatorStmt: EQ \n   n$5=*&spec:char* [line 52, column 10]\n  n$6=*n$5:char [line 52, column 9]\n " shape="box"]
 	
 
-	 68 -> 70 ;
-67 [label="67: Prune (true branch) \n   n$1=*&spec:char * [line 49]\n  PRUNE((n$1 != 0), true); [line 49]\n  REMOVE_TEMPS(n$1); [line 49]\n " shape="invhouse"]
+	 "main.fad58de7366495db4650cfefac2fcd61_15" -> "main.fad58de7366495db4650cfefac2fcd61_16" ;
+	 "main.fad58de7366495db4650cfefac2fcd61_15" -> "main.fad58de7366495db4650cfefac2fcd61_17" ;
+"main.fad58de7366495db4650cfefac2fcd61_16" [label="16: Prune (true branch) \n   PRUNE((n$6 == 39), true); [line 52, column 9]\n " shape="invhouse"]
 	
 
-	 67 -> 69 ;
-66 [label="66: + \n  " ]
+	 "main.fad58de7366495db4650cfefac2fcd61_16" -> "main.fad58de7366495db4650cfefac2fcd61_18" ;
+"main.fad58de7366495db4650cfefac2fcd61_17" [label="17: Prune (false branch) \n   PRUNE(!(n$6 == 39), false); [line 52, column 9]\n " shape="invhouse"]
 	
 
-	 66 -> 71 ;
-	 66 -> 72 ;
-65 [label="65: + \n  " ]
+	 "main.fad58de7366495db4650cfefac2fcd61_17" -> "main.fad58de7366495db4650cfefac2fcd61_14" ;
+"main.fad58de7366495db4650cfefac2fcd61_18" [label="18:  BinaryOperatorStmt: Assign \n   *&block_size:char*=null [line 53, column 7]\n " shape="box"]
 	
 
-	 65 -> 64 ;
-64 [label="64:  Return Stmt \n   *&return:int =0 [line 56]\n  APPLY_ABSTRACTION; [line 56]\n " shape="box"]
+	 "main.fad58de7366495db4650cfefac2fcd61_18" -> "main.fad58de7366495db4650cfefac2fcd61_14" ;
+"main.fad58de7366495db4650cfefac2fcd61_19" [label="19:  BinaryOperatorStmt: Assign \n   n$7=_fun_getenv(\"BLOCK\":char const *) [line 47, column 10]\n  *&spec:char*=n$7 [line 47, column 3]\n " shape="box"]
 	
 
-	 64 -> 63 ;
-63 [label="63: Exit main \n  " color=yellow style=filled]
+	 "main.fad58de7366495db4650cfefac2fcd61_19" -> "main.fad58de7366495db4650cfefac2fcd61_5" ;
+	 "main.fad58de7366495db4650cfefac2fcd61_19" -> "main.fad58de7366495db4650cfefac2fcd61_6" ;
+"shortcircuit_or.5845fe75b89f8af7ec1944cd207962af_1" [label="1: Start shortcircuit_or\nFormals:  x:int*\nLocals:  \n   DECLARE_LOCALS(&return); [line 12, column 1]\n " color=yellow style=filled]
 	
 
-62 [label="62: Start main\nFormals: \nLocals:  SIL_temp_conditional___n$0:int  SIL_temp_conditional___n$3:int  SIL_temp_conditional___n$7:int  block_size:char * spec:char * \n   DECLARE_LOCALS(&return,&SIL_temp_conditional___n$0,&SIL_temp_conditional___n$3,&SIL_temp_conditional___n$7,&block_size,&spec); [line 42]\n " color=yellow style=filled]
+	 "shortcircuit_or.5845fe75b89f8af7ec1944cd207962af_1" -> "shortcircuit_or.5845fe75b89f8af7ec1944cd207962af_5" ;
+"shortcircuit_or.5845fe75b89f8af7ec1944cd207962af_2" [label="2: Exit shortcircuit_or \n  " color=yellow style=filled]
 	
 
-	 62 -> 95 ;
-61 [label="61:  BinaryOperatorStmt: Assign \n   n$11=_fun_getenv(\"BLOCK\":char *) [line 34]\n  *&spec:char *=n$11 [line 34]\n  REMOVE_TEMPS(n$11); [line 34]\n  APPLY_ABSTRACTION; [line 34]\n " shape="box"]
+"shortcircuit_or.5845fe75b89f8af7ec1944cd207962af_3" [label="3: + \n  " ]
 	
 
-	 61 -> 36 ;
-60 [label="60:  BinaryOperatorStmt: Assign \n   *&block_size:char *=0 [line 38]\n  NULLIFY(&block_size); [line 38]\n  APPLY_ABSTRACTION; [line 38]\n " shape="box"]
+	 "shortcircuit_or.5845fe75b89f8af7ec1944cd207962af_3" -> "shortcircuit_or.5845fe75b89f8af7ec1944cd207962af_4" ;
+"shortcircuit_or.5845fe75b89f8af7ec1944cd207962af_4" [label="4:  between_join_and_exit \n  " shape="box"]
 	
 
-	 60 -> 36 ;
-59 [label="59: Prune (false branch) \n   n$10=*&SIL_temp_conditional___n$7:int  [line 37]\n  PRUNE((n$10 == 0), false); [line 37]\n  REMOVE_TEMPS(n$10); [line 37]\n  NULLIFY(&SIL_temp_conditional___n$7); [line 37]\n  NULLIFY(&spec); [line 37]\n  APPLY_ABSTRACTION; [line 37]\n " shape="invhouse"]
+	 "shortcircuit_or.5845fe75b89f8af7ec1944cd207962af_4" -> "shortcircuit_or.5845fe75b89f8af7ec1944cd207962af_2" ;
+"shortcircuit_or.5845fe75b89f8af7ec1944cd207962af_5" [label="5:  BinaryOperatorStmt: EQ \n   n$0=*&x:int* [line 14, column 7]\n " shape="box"]
 	
 
-	 59 -> 35 ;
-58 [label="58: Prune (true branch) \n   n$10=*&SIL_temp_conditional___n$7:int  [line 37]\n  PRUNE((n$10 != 0), true); [line 37]\n  REMOVE_TEMPS(n$10); [line 37]\n  NULLIFY(&SIL_temp_conditional___n$7); [line 37]\n " shape="invhouse"]
+	 "shortcircuit_or.5845fe75b89f8af7ec1944cd207962af_5" -> "shortcircuit_or.5845fe75b89f8af7ec1944cd207962af_6" ;
+	 "shortcircuit_or.5845fe75b89f8af7ec1944cd207962af_5" -> "shortcircuit_or.5845fe75b89f8af7ec1944cd207962af_7" ;
+"shortcircuit_or.5845fe75b89f8af7ec1944cd207962af_6" [label="6: Prune (true branch) \n   PRUNE((n$0 == null), true); [line 14, column 7]\n " shape="invhouse"]
 	
 
-	 58 -> 60 ;
-57 [label="57:  ConditinalStmt Branch \n   *&SIL_temp_conditional___n$7:int =1 [line 37]\n  APPLY_ABSTRACTION; [line 37]\n " shape="box"]
+	 "shortcircuit_or.5845fe75b89f8af7ec1944cd207962af_6" -> "shortcircuit_or.5845fe75b89f8af7ec1944cd207962af_11" ;
+"shortcircuit_or.5845fe75b89f8af7ec1944cd207962af_7" [label="7: Prune (false branch) \n   PRUNE(!(n$0 == null), false); [line 14, column 7]\n " shape="invhouse"]
 	
 
-	 57 -> 52 ;
-56 [label="56:  ConditinalStmt Branch \n   *&SIL_temp_conditional___n$7:int =0 [line 37]\n  APPLY_ABSTRACTION; [line 37]\n " shape="box"]
+	 "shortcircuit_or.5845fe75b89f8af7ec1944cd207962af_7" -> "shortcircuit_or.5845fe75b89f8af7ec1944cd207962af_8" ;
+"shortcircuit_or.5845fe75b89f8af7ec1944cd207962af_8" [label="8:  BinaryOperatorStmt: EQ \n   n$1=*&x:int* [line 14, column 18]\n  n$2=*n$1:int [line 14, column 17]\n " shape="box"]
 	
 
-	 56 -> 52 ;
-55 [label="55: Prune (false branch) \n   PRUNE((n$9 == 0), false); [line 37]\n  REMOVE_TEMPS(n$9); [line 37]\n " shape="invhouse"]
+	 "shortcircuit_or.5845fe75b89f8af7ec1944cd207962af_8" -> "shortcircuit_or.5845fe75b89f8af7ec1944cd207962af_9" ;
+	 "shortcircuit_or.5845fe75b89f8af7ec1944cd207962af_8" -> "shortcircuit_or.5845fe75b89f8af7ec1944cd207962af_10" ;
+"shortcircuit_or.5845fe75b89f8af7ec1944cd207962af_9" [label="9: Prune (true branch) \n   PRUNE((n$2 == 2), true); [line 14, column 17]\n " shape="invhouse"]
 	
 
-	 55 -> 57 ;
-54 [label="54: Prune (true branch) \n   PRUNE((n$9 != 0), true); [line 37]\n  REMOVE_TEMPS(n$9); [line 37]\n " shape="invhouse"]
+	 "shortcircuit_or.5845fe75b89f8af7ec1944cd207962af_9" -> "shortcircuit_or.5845fe75b89f8af7ec1944cd207962af_11" ;
+"shortcircuit_or.5845fe75b89f8af7ec1944cd207962af_10" [label="10: Prune (false branch) \n   PRUNE(!(n$2 == 2), false); [line 14, column 17]\n " shape="invhouse"]
 	
 
-	 54 -> 56 ;
-53 [label="53:  BinaryOperatorStmt: Assign \n   n$8=_fun_getenv(\"BLOCKSIZE\":char *) [line 37]\n  *&spec:char *=n$8 [line 37]\n  n$9=*&spec:char * [line 37]\n  REMOVE_TEMPS(n$8); [line 37]\n " shape="box"]
+	 "shortcircuit_or.5845fe75b89f8af7ec1944cd207962af_10" -> "shortcircuit_or.5845fe75b89f8af7ec1944cd207962af_12" ;
+"shortcircuit_or.5845fe75b89f8af7ec1944cd207962af_11" [label="11:  BinaryOperatorStmt: Assign \n   *&x:int*=17 [line 15, column 5]\n " shape="box"]
 	
 
-	 53 -> 54 ;
-	 53 -> 55 ;
-52 [label="52: + \n  " ]
+	 "shortcircuit_or.5845fe75b89f8af7ec1944cd207962af_11" -> "shortcircuit_or.5845fe75b89f8af7ec1944cd207962af_3" ;
+"shortcircuit_or.5845fe75b89f8af7ec1944cd207962af_12" [label="12:  BinaryOperatorStmt: Assign \n   *&x:int*=32 [line 17, column 5]\n " shape="box"]
 	
 
-	 52 -> 58 ;
-	 52 -> 59 ;
-51 [label="51: Prune (false branch) \n   n$6=*&SIL_temp_conditional___n$3:int  [line 36]\n  PRUNE((n$6 == 0), false); [line 36]\n  REMOVE_TEMPS(n$6); [line 36]\n  NULLIFY(&SIL_temp_conditional___n$3); [line 36]\n  APPLY_ABSTRACTION; [line 36]\n " shape="invhouse"]
+	 "shortcircuit_or.5845fe75b89f8af7ec1944cd207962af_12" -> "shortcircuit_or.5845fe75b89f8af7ec1944cd207962af_3" ;
+"shortcircuit_and.10f9635d805ff3bd29dfc80b8f8d12da_1" [label="1: Start shortcircuit_and\nFormals:  x:int*\nLocals:  \n   DECLARE_LOCALS(&return); [line 21, column 1]\n " color=yellow style=filled]
 	
 
-	 51 -> 35 ;
-50 [label="50: Prune (true branch) \n   n$6=*&SIL_temp_conditional___n$3:int  [line 36]\n  PRUNE((n$6 != 0), true); [line 36]\n  REMOVE_TEMPS(n$6); [line 36]\n  NULLIFY(&SIL_temp_conditional___n$3); [line 36]\n " shape="invhouse"]
+	 "shortcircuit_and.10f9635d805ff3bd29dfc80b8f8d12da_1" -> "shortcircuit_and.10f9635d805ff3bd29dfc80b8f8d12da_5" ;
+	 "shortcircuit_and.10f9635d805ff3bd29dfc80b8f8d12da_1" -> "shortcircuit_and.10f9635d805ff3bd29dfc80b8f8d12da_6" ;
+"shortcircuit_and.10f9635d805ff3bd29dfc80b8f8d12da_2" [label="2: Exit shortcircuit_and \n  " color=yellow style=filled]
 	
 
-	 50 -> 53 ;
-49 [label="49:  ConditinalStmt Branch \n   *&SIL_temp_conditional___n$3:int =1 [line 36]\n  APPLY_ABSTRACTION; [line 36]\n " shape="box"]
+"shortcircuit_and.10f9635d805ff3bd29dfc80b8f8d12da_3" [label="3: + \n  " ]
 	
 
-	 49 -> 44 ;
-48 [label="48:  ConditinalStmt Branch \n   *&SIL_temp_conditional___n$3:int =0 [line 36]\n  APPLY_ABSTRACTION; [line 36]\n " shape="box"]
+	 "shortcircuit_and.10f9635d805ff3bd29dfc80b8f8d12da_3" -> "shortcircuit_and.10f9635d805ff3bd29dfc80b8f8d12da_4" ;
+"shortcircuit_and.10f9635d805ff3bd29dfc80b8f8d12da_4" [label="4:  between_join_and_exit \n  " shape="box"]
 	
 
-	 48 -> 44 ;
-47 [label="47: Prune (false branch) \n   PRUNE((n$5 == 0), false); [line 36]\n  REMOVE_TEMPS(n$5); [line 36]\n " shape="invhouse"]
+	 "shortcircuit_and.10f9635d805ff3bd29dfc80b8f8d12da_4" -> "shortcircuit_and.10f9635d805ff3bd29dfc80b8f8d12da_2" ;
+"shortcircuit_and.10f9635d805ff3bd29dfc80b8f8d12da_5" [label="5: Prune (true branch) \n   n$0=*&x:int* [line 22, column 8]\n  PRUNE(!n$0, true); [line 22, column 8]\n " shape="invhouse"]
 	
 
-	 47 -> 49 ;
-46 [label="46: Prune (true branch) \n   PRUNE((n$5 != 0), true); [line 36]\n  REMOVE_TEMPS(n$5); [line 36]\n " shape="invhouse"]
+	 "shortcircuit_and.10f9635d805ff3bd29dfc80b8f8d12da_5" -> "shortcircuit_and.10f9635d805ff3bd29dfc80b8f8d12da_7" ;
+"shortcircuit_and.10f9635d805ff3bd29dfc80b8f8d12da_6" [label="6: Prune (false branch) \n   n$0=*&x:int* [line 22, column 8]\n  PRUNE(n$0, false); [line 22, column 8]\n " shape="invhouse"]
 	
 
-	 46 -> 48 ;
-45 [label="45:  BinaryOperatorStmt: Assign \n   n$4=_fun_getenv(\"BLOCK_SIZE\":char *) [line 36]\n  *&spec:char *=n$4 [line 36]\n  n$5=*&spec:char * [line 36]\n  REMOVE_TEMPS(n$4); [line 36]\n  NULLIFY(&spec); [line 36]\n " shape="box"]
+	 "shortcircuit_and.10f9635d805ff3bd29dfc80b8f8d12da_6" -> "shortcircuit_and.10f9635d805ff3bd29dfc80b8f8d12da_11" ;
+"shortcircuit_and.10f9635d805ff3bd29dfc80b8f8d12da_7" [label="7:  BinaryOperatorStmt: Assign \n   n$1=_fun_getenv(\"BLOCK\":char const *) [line 22, column 19]\n  *&x:int*=n$1 [line 22, column 15]\n  n$2=*&x:int* [line 22, column 15]\n " shape="box"]
 	
 
-	 45 -> 46 ;
-	 45 -> 47 ;
-44 [label="44: + \n  " ]
+	 "shortcircuit_and.10f9635d805ff3bd29dfc80b8f8d12da_7" -> "shortcircuit_and.10f9635d805ff3bd29dfc80b8f8d12da_8" ;
+	 "shortcircuit_and.10f9635d805ff3bd29dfc80b8f8d12da_7" -> "shortcircuit_and.10f9635d805ff3bd29dfc80b8f8d12da_9" ;
+"shortcircuit_and.10f9635d805ff3bd29dfc80b8f8d12da_8" [label="8: Prune (true branch) \n   PRUNE(!n$2, true); [line 22, column 15]\n " shape="invhouse"]
 	
 
-	 44 -> 50 ;
-	 44 -> 51 ;
-43 [label="43: Prune (false branch) \n   n$2=*&SIL_temp_conditional___n$0:int  [line 36]\n  PRUNE((n$2 == 0), false); [line 36]\n  REMOVE_TEMPS(n$2); [line 36]\n  NULLIFY(&SIL_temp_conditional___n$0); [line 36]\n  APPLY_ABSTRACTION; [line 36]\n " shape="invhouse"]
+	 "shortcircuit_and.10f9635d805ff3bd29dfc80b8f8d12da_8" -> "shortcircuit_and.10f9635d805ff3bd29dfc80b8f8d12da_10" ;
+"shortcircuit_and.10f9635d805ff3bd29dfc80b8f8d12da_9" [label="9: Prune (false branch) \n   PRUNE(n$2, false); [line 22, column 15]\n " shape="invhouse"]
 	
 
-	 43 -> 35 ;
-42 [label="42: Prune (true branch) \n   n$2=*&SIL_temp_conditional___n$0:int  [line 36]\n  PRUNE((n$2 != 0), true); [line 36]\n  REMOVE_TEMPS(n$2); [line 36]\n  NULLIFY(&SIL_temp_conditional___n$0); [line 36]\n " shape="invhouse"]
+	 "shortcircuit_and.10f9635d805ff3bd29dfc80b8f8d12da_9" -> "shortcircuit_and.10f9635d805ff3bd29dfc80b8f8d12da_11" ;
+"shortcircuit_and.10f9635d805ff3bd29dfc80b8f8d12da_10" [label="10:  BinaryOperatorStmt: Assign \n   *&x:int*=17 [line 23, column 5]\n " shape="box"]
 	
 
-	 42 -> 45 ;
-41 [label="41:  ConditinalStmt Branch \n   *&SIL_temp_conditional___n$0:int =1 [line 36]\n  APPLY_ABSTRACTION; [line 36]\n " shape="box"]
+	 "shortcircuit_and.10f9635d805ff3bd29dfc80b8f8d12da_10" -> "shortcircuit_and.10f9635d805ff3bd29dfc80b8f8d12da_3" ;
+"shortcircuit_and.10f9635d805ff3bd29dfc80b8f8d12da_11" [label="11:  BinaryOperatorStmt: Assign \n   n$3=*&x:int* [line 25, column 6]\n  *n$3:int=32 [line 25, column 5]\n " shape="box"]
 	
 
-	 41 -> 37 ;
-40 [label="40:  ConditinalStmt Branch \n   *&SIL_temp_conditional___n$0:int =0 [line 36]\n  APPLY_ABSTRACTION; [line 36]\n " shape="box"]
-	
-
-	 40 -> 37 ;
-39 [label="39: Prune (false branch) \n   n$1=*&spec:char * [line 36]\n  PRUNE((n$1 == 0), false); [line 36]\n  REMOVE_TEMPS(n$1); [line 36]\n  NULLIFY(&spec); [line 36]\n " shape="invhouse"]
-	
-
-	 39 -> 41 ;
-38 [label="38: Prune (true branch) \n   n$1=*&spec:char * [line 36]\n  PRUNE((n$1 != 0), true); [line 36]\n  REMOVE_TEMPS(n$1); [line 36]\n  NULLIFY(&spec); [line 36]\n " shape="invhouse"]
-	
-
-	 38 -> 40 ;
-37 [label="37: + \n  " ]
-	
-
-	 37 -> 42 ;
-	 37 -> 43 ;
-36 [label="36: + \n  " ]
-	
-
-	 36 -> 38 ;
-	 36 -> 39 ;
-35 [label="35: Exit test_loop \n  " color=yellow style=filled]
-	
-
-34 [label="34: Start test_loop\nFormals: \nLocals:  SIL_temp_conditional___n$0:int  SIL_temp_conditional___n$3:int  SIL_temp_conditional___n$7:int  block_size:char * spec:char * \n   DECLARE_LOCALS(&return,&SIL_temp_conditional___n$0,&SIL_temp_conditional___n$3,&SIL_temp_conditional___n$7,&block_size,&spec); [line 29]\n " color=yellow style=filled]
-	
-
-	 34 -> 61 ;
-33 [label="33:  BinaryOperatorStmt: Assign \n   n$7=*&x:int * [line 25]\n  *n$7:int =32 [line 25]\n  REMOVE_TEMPS(n$7); [line 25]\n  NULLIFY(&x); [line 25]\n  APPLY_ABSTRACTION; [line 25]\n " shape="box"]
-	
-
-	 33 -> 15 ;
-32 [label="32:  BinaryOperatorStmt: Assign \n   *&x:int *=17 [line 23]\n  NULLIFY(&x); [line 23]\n  APPLY_ABSTRACTION; [line 23]\n " shape="box"]
-	
-
-	 32 -> 15 ;
-31 [label="31: Prune (false branch) \n   n$6=*&SIL_temp_conditional___n$3:int  [line 22]\n  PRUNE((n$6 == 0), false); [line 22]\n  REMOVE_TEMPS(n$6); [line 22]\n  NULLIFY(&SIL_temp_conditional___n$3); [line 22]\n  APPLY_ABSTRACTION; [line 22]\n " shape="invhouse"]
-	
-
-	 31 -> 33 ;
-30 [label="30: Prune (true branch) \n   n$6=*&SIL_temp_conditional___n$3:int  [line 22]\n  PRUNE((n$6 != 0), true); [line 22]\n  REMOVE_TEMPS(n$6); [line 22]\n  NULLIFY(&SIL_temp_conditional___n$3); [line 22]\n  NULLIFY(&x); [line 22]\n " shape="invhouse"]
-	
-
-	 30 -> 32 ;
-29 [label="29:  ConditinalStmt Branch \n   *&SIL_temp_conditional___n$3:int =1 [line 22]\n  APPLY_ABSTRACTION; [line 22]\n " shape="box"]
-	
-
-	 29 -> 24 ;
-28 [label="28:  ConditinalStmt Branch \n   *&SIL_temp_conditional___n$3:int =0 [line 22]\n  APPLY_ABSTRACTION; [line 22]\n " shape="box"]
-	
-
-	 28 -> 24 ;
-27 [label="27: Prune (false branch) \n   PRUNE((n$5 == 0), false); [line 22]\n  REMOVE_TEMPS(n$5); [line 22]\n " shape="invhouse"]
-	
-
-	 27 -> 29 ;
-26 [label="26: Prune (true branch) \n   PRUNE((n$5 != 0), true); [line 22]\n  REMOVE_TEMPS(n$5); [line 22]\n " shape="invhouse"]
-	
-
-	 26 -> 28 ;
-25 [label="25:  BinaryOperatorStmt: Assign \n   n$4=_fun_getenv(\"BLOCK\":char *) [line 22]\n  *&x:int *=n$4 [line 22]\n  n$5=*&x:int * [line 22]\n  REMOVE_TEMPS(n$4); [line 22]\n " shape="box"]
-	
-
-	 25 -> 26 ;
-	 25 -> 27 ;
-24 [label="24: + \n  " ]
-	
-
-	 24 -> 30 ;
-	 24 -> 31 ;
-23 [label="23: Prune (false branch) \n   n$2=*&SIL_temp_conditional___n$0:int  [line 22]\n  PRUNE((n$2 == 0), false); [line 22]\n  REMOVE_TEMPS(n$2); [line 22]\n  NULLIFY(&SIL_temp_conditional___n$0); [line 22]\n  APPLY_ABSTRACTION; [line 22]\n " shape="invhouse"]
-	
-
-	 23 -> 33 ;
-22 [label="22: Prune (true branch) \n   n$2=*&SIL_temp_conditional___n$0:int  [line 22]\n  PRUNE((n$2 != 0), true); [line 22]\n  REMOVE_TEMPS(n$2); [line 22]\n  NULLIFY(&SIL_temp_conditional___n$0); [line 22]\n " shape="invhouse"]
-	
-
-	 22 -> 25 ;
-21 [label="21:  ConditinalStmt Branch \n   *&SIL_temp_conditional___n$0:int =1 [line 22]\n  APPLY_ABSTRACTION; [line 22]\n " shape="box"]
-	
-
-	 21 -> 17 ;
-20 [label="20:  ConditinalStmt Branch \n   *&SIL_temp_conditional___n$0:int =0 [line 22]\n  APPLY_ABSTRACTION; [line 22]\n " shape="box"]
-	
-
-	 20 -> 17 ;
-19 [label="19: Prune (false branch) \n   n$1=*&x:int * [line 22]\n  PRUNE((n$1 == 0), false); [line 22]\n  REMOVE_TEMPS(n$1); [line 22]\n " shape="invhouse"]
-	
-
-	 19 -> 21 ;
-18 [label="18: Prune (true branch) \n   n$1=*&x:int * [line 22]\n  PRUNE((n$1 != 0), true); [line 22]\n  REMOVE_TEMPS(n$1); [line 22]\n " shape="invhouse"]
-	
-
-	 18 -> 20 ;
-17 [label="17: + \n  " ]
-	
-
-	 17 -> 22 ;
-	 17 -> 23 ;
-16 [label="16:  between_join_and_exit \n   APPLY_ABSTRACTION; [line 22]\n " shape="box"]
-	
-
-	 16 -> 14 ;
-15 [label="15: + \n  " ]
-	
-
-	 15 -> 16 ;
-14 [label="14: Exit shortcircuit_and \n  " color=yellow style=filled]
-	
-
-13 [label="13: Start shortcircuit_and\nFormals:  x:int *\nLocals:  SIL_temp_conditional___n$0:int  SIL_temp_conditional___n$3:int  \n   DECLARE_LOCALS(&return,&SIL_temp_conditional___n$0,&SIL_temp_conditional___n$3); [line 21]\n " color=yellow style=filled]
-	
-
-	 13 -> 18 ;
-	 13 -> 19 ;
-12 [label="12:  BinaryOperatorStmt: Assign \n   *&x:int *=32 [line 17]\n  NULLIFY(&x); [line 17]\n  APPLY_ABSTRACTION; [line 17]\n " shape="box"]
-	
-
-	 12 -> 3 ;
-11 [label="11:  BinaryOperatorStmt: Assign \n   *&x:int *=17 [line 15]\n  NULLIFY(&x); [line 15]\n  APPLY_ABSTRACTION; [line 15]\n " shape="box"]
-	
-
-	 11 -> 3 ;
-10 [label="10: Prune (false branch) \n   PRUNE(((n$2 == 2) == 0), false); [line 14]\n  REMOVE_TEMPS(n$2); [line 14]\n " shape="invhouse"]
-	
-
-	 10 -> 12 ;
-9 [label="9: Prune (true branch) \n   PRUNE(((n$2 == 2) != 0), true); [line 14]\n  REMOVE_TEMPS(n$2); [line 14]\n  APPLY_ABSTRACTION; [line 14]\n " shape="invhouse"]
-	
-
-	 9 -> 11 ;
-8 [label="8:  BinaryOperatorStmt: EQ \n   n$1=*&x:int * [line 14]\n  n$2=*n$1:int  [line 14]\n  REMOVE_TEMPS(n$1); [line 14]\n  NULLIFY(&x); [line 14]\n " shape="box"]
-	
-
-	 8 -> 9 ;
-	 8 -> 10 ;
-7 [label="7: Prune (false branch) \n   PRUNE(((n$0 == 0) == 0), false); [line 14]\n  REMOVE_TEMPS(n$0); [line 14]\n " shape="invhouse"]
-	
-
-	 7 -> 8 ;
-6 [label="6: Prune (true branch) \n   PRUNE(((n$0 == 0) != 0), true); [line 14]\n  REMOVE_TEMPS(n$0); [line 14]\n  APPLY_ABSTRACTION; [line 14]\n " shape="invhouse"]
-	
-
-	 6 -> 11 ;
-5 [label="5:  BinaryOperatorStmt: EQ \n   n$0=*&x:int * [line 14]\n " shape="box"]
-	
-
-	 5 -> 6 ;
-	 5 -> 7 ;
-4 [label="4:  between_join_and_exit \n   APPLY_ABSTRACTION; [line 14]\n " shape="box"]
-	
-
-	 4 -> 2 ;
-3 [label="3: + \n  " ]
-	
-
-	 3 -> 4 ;
-2 [label="2: Exit shortcircuit_or \n  " color=yellow style=filled]
-	
-
-1 [label="1: Start shortcircuit_or\nFormals:  x:int *\nLocals:  \n   DECLARE_LOCALS(&return); [line 12]\n " color=yellow style=filled]
-	
-
-	 1 -> 5 ;
+	 "shortcircuit_and.10f9635d805ff3bd29dfc80b8f8d12da_11" -> "shortcircuit_and.10f9635d805ff3bd29dfc80b8f8d12da_3" ;
 }

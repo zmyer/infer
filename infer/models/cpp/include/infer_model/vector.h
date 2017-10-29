@@ -19,6 +19,7 @@
 #include <cassert>
 
 #include <infer_model/common.h>
+#include <infer_model/infer_traits.h>
 
 #ifdef INFER_USE_LIBCPP
 // libc++ vector header includes it, but it breaks
@@ -49,13 +50,29 @@ struct vector_ref<bool> {
   typedef bool_ref ref;
 };
 
+int __infer_skip__get_int_val();
+
 // this function will be treated as SKIP by infer
 template <class T>
 T* __infer_skip__get_nondet_val() {}
 
+template <class T>
+void __infer_deref_first_arg(T* ptr) INFER_MODEL_AS_DEREF_FIRST_ARG;
+
+#define INFER_EXCLUDE_CONDITION(cond) \
+  if (cond)                           \
+    while (1)
+
 // WARNING: do not add any new fields to std::vector model. sizeof(std::vector)
 // = 24 !!
+#ifdef INFER_USE_LIBCPP
+// if using libcpp, then this template will have already a default _Allocator
+// set (see include/c++/v1/iosfwd, where vector's declaration has a template
+// with a default allocator<_Tp>, like the commented section below)
+template <class _Tp, class _Allocator /* = allocator<_Tp> */>
+#else
 template <class _Tp, class _Allocator = allocator<_Tp>>
+#endif
 class vector {
 
  public:
@@ -76,46 +93,66 @@ class vector {
   typedef std::reverse_iterator<const_iterator> const_reverse_iterator;
 
   /* INFER SPECIFIC HELPER FUNCTIONS */
-  bool isEmpty = true;
 
   // required to keep sizeof(std::vector) same as in standard
   value_type* beginPtr = nullptr;
   value_type* endPtr = nullptr;
+  value_type* __ignore;
 
-  value_type* get() const {
-    if (isEmpty) {
-      return nullptr;
-    }
-    // infer will angelically assume that __infer_skip__get_nondet_val
-    // returns non-null with unknown value which means there will be no
-    // null dereference
+  value_type* _get_begin() const {
+    // we have to resort to that hack so that infer can truly dereference
+    // beginPtr.
+    // Another way to model that would be 'auto tmp = *beginPtr' but that will
+    // trigger copy constructor that may not exist for value_type
+    __infer_deref_first_arg(beginPtr);
+    return beginPtr;
+  }
+
+  value_type* _get_end() const {
+    __infer_deref_first_arg(beginPtr);
+    __infer_deref_first_arg(endPtr);
+    return endPtr;
+  }
+
+  value_type* _get_index(size_type __n) const {
+    __infer_deref_first_arg(beginPtr);
     return __infer_skip__get_nondet_val<value_type>();
   }
 
   void allocate(size_type size) {
-    if (size > 0) {
-      isEmpty = false;
-    } else {
-      isEmpty = true;
-    }
+    // assume that allocation will produce non-empty vector regardless of the
+    // size
+    // if (size > 0) {
+    beginPtr = __infer_skip__get_nondet_val<value_type>();
+    endPtr = __infer_skip__get_nondet_val<value_type>();
+    //} else {
+    //  deallocate();
+    //}
   }
+
+  void deallocate() { beginPtr = nullptr; }
 
   template <class Iter>
   void allocate_iter(Iter begin, Iter end) {
-    if (begin != end) {
+    // very simplified implementation to avoid false positives
+    allocate(1);
+    // infer doesn't understand iterators well which leads to skip functions
+    // they in effect lead to false positives in situations when empty vector
+    // is impossible. Implemenatation should look like this:
+    /*if (begin != end) {
       allocate(1);
     } else {
-      allocate(0);
-    }
+      deallocate();
+    }*/
   }
 
   /* std::vector implementation */
 
   vector() noexcept(is_nothrow_default_constructible<allocator_type>::value) {
-    allocate(0);
+    deallocate();
   }
 
-  explicit vector(const allocator_type& __a) noexcept { allocate(0); }
+  explicit vector(const allocator_type& __a) noexcept { deallocate(); }
 
   explicit vector(size_type __n);
   // introduced in C++14
@@ -200,15 +237,22 @@ class vector {
   const_reverse_iterator crend() const noexcept { return rend(); }
 
   size_type size() const noexcept {
-    if (!isEmpty) {
-      return 10;
+    if (empty()) {
+      return 0;
     }
-    return 0;
+    return 10;
   }
 
   size_type capacity() const noexcept {}
 
-  bool empty() const noexcept { return isEmpty; }
+  bool empty() const noexcept {
+    if (beginPtr == nullptr) {
+      // prune branch where beginPtr is nullptr and endPtr isn't
+      INFER_EXCLUDE_CONDITION(endPtr != nullptr);
+      return true;
+    }
+    return false;
+  }
   size_type max_size() const noexcept;
   void reserve(size_type __n);
   void shrink_to_fit() noexcept;
@@ -218,14 +262,20 @@ class vector {
   reference at(size_type __n);
   const_reference at(size_type __n) const;
 
-  reference front() { return (reference)*get(); }
-  const_reference front() const { return (const_reference)*get(); }
-  reference back() { return (reference)*get(); }
-  const_reference back() const { return (const_reference)*get(); }
+  reference front() { return (reference)*_get_begin(); }
+  const_reference front() const { return (const_reference)*_get_begin(); }
+  reference back() {
+    size_t last_element = __infer_skip__get_int_val();
+    return (reference)*_get_index(last_element);
+  }
+  const_reference back() const {
+    size_t last_element = __infer_skip__get_int_val();
+    return (const_reference)*_get_index(last_element);
+  }
 
-  value_type* data() noexcept { return get(); }
+  value_type* data() noexcept { return _get_begin(); }
 
-  const value_type* data() const noexcept { return get(); }
+  const value_type* data() const noexcept { return _get_begin(); }
 
   void push_back(const_reference __x);
   void push_back(value_type&& __x);
@@ -259,7 +309,7 @@ class vector {
   iterator erase(const_iterator __position);
   iterator erase(const_iterator __first, const_iterator __last);
 
-  void clear() noexcept { isEmpty = true; }
+  void clear() noexcept { deallocate(); }
 
   void resize(size_type __sz);
   void resize(size_type __sz, const_reference __x);
@@ -326,25 +376,25 @@ vector<_Tp, _Allocator>::vector(
 
 template <class _Tp, class _Allocator>
 vector<_Tp, _Allocator>::vector(const vector& __x) {
-  isEmpty = __x.isEmpty;
+  beginPtr = __x.beginPtr;
 }
 
 template <class _Tp, class _Allocator>
 vector<_Tp, _Allocator>::vector(const vector& __x, const allocator_type& __a) {
-  isEmpty = __x.isEmpty;
+  beginPtr = __x.beginPtr;
 }
 
 template <class _Tp, class _Allocator>
 inline vector<_Tp, _Allocator>::vector(vector&& __x) noexcept {
-  isEmpty = __x.isEmpty;
-  __x.isEmpty = true;
+  beginPtr = __x.beginPtr;
+  __x.beginPtr = nullptr;
 }
 
 template <class _Tp, class _Allocator>
 inline vector<_Tp, _Allocator>::vector(vector&& __x,
                                        const allocator_type& __a) {
-  isEmpty = __x.isEmpty;
-  __x.isEmpty = true;
+  beginPtr = __x.beginPtr;
+  __x.beginPtr = nullptr;
 }
 
 template <class _Tp, class _Allocator>
@@ -363,15 +413,15 @@ inline vector<_Tp, _Allocator>& vector<_Tp, _Allocator>::operator=(
     vector&& __x) noexcept /*((__noexcept_move_assign_container<_Allocator,
                               __alloc_traits>::value)) */
 {
-  isEmpty = __x.isEmpty;
-  __x.isEmpty = true;
+  beginPtr = __x.beginPtr;
+  __x.beginPtr = nullptr;
   return *this;
 }
 
 template <class _Tp, class _Allocator>
 inline vector<_Tp, _Allocator>& vector<_Tp, _Allocator>::operator=(
     const vector& __x) {
-  isEmpty = __x.isEmpty;
+  beginPtr = __x.beginPtr;
   return *this;
 }
 
@@ -430,25 +480,25 @@ vector<_Tp, _Allocator>::end() const noexcept {
 template <class _Tp, class _Allocator>
 inline typename vector<_Tp, _Allocator>::reference vector<_Tp, _Allocator>::
 operator[](size_type __n) {
-  return (reference)*get();
+  return (reference)*_get_index(__n);
 }
 
 template <class _Tp, class _Allocator>
 inline typename vector<_Tp, _Allocator>::const_reference
     vector<_Tp, _Allocator>::operator[](size_type __n) const {
-  return (const_reference)*get();
+  return (const_reference)*_get_index(__n);
 }
 
 template <class _Tp, class _Allocator>
 typename vector<_Tp, _Allocator>::reference vector<_Tp, _Allocator>::at(
     size_type __n) {
-  return (reference)*get();
+  return (reference)*_get_index(__n);
 }
 
 template <class _Tp, class _Allocator>
 typename vector<_Tp, _Allocator>::const_reference vector<_Tp, _Allocator>::at(
     size_type __n) const {
-  return (const_reference)*get();
+  return (const_reference)*_get_index(__n);
 }
 
 template <class _Tp, class _Allocator>
@@ -516,7 +566,7 @@ typename vector<_Tp, _Allocator>::iterator vector<_Tp, _Allocator>::emplace(
 template <class _Tp, class _Allocator>
 typename vector<_Tp, _Allocator>::iterator vector<_Tp, _Allocator>::insert(
     const_iterator __position, size_type __n, const_reference __x) {
-  if (isEmpty) {
+  if (empty()) {
     allocate(__n);
   }
 }
@@ -545,9 +595,9 @@ void vector<_Tp, _Allocator>::resize(size_type __sz, const_reference __x) {
 
 template <class _Tp, class _Allocator>
 void vector<_Tp, _Allocator>::swap(vector& __x) {
-  bool tmp = __x.isEmpty;
-  __x.isEmpty = isEmpty;
-  isEmpty = tmp;
+  value_type* tmp = __x.beginPtr;
+  __x.beginPtr = beginPtr;
+  beginPtr = tmp;
 }
 
 template <class _Allocator>

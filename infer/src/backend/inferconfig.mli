@@ -7,51 +7,32 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *)
 
-open! Utils
+open! IStd
 
 (** Filter type for a source file *)
-type path_filter = DB.source_file -> bool
+type path_filter = SourceFile.t -> bool
 
 (** Filter type for an error name. *)
-type error_filter = Localise.t -> bool
+type error_filter = IssueType.t -> bool
 
 (** Filter type for a procedure name *)
-type proc_filter = Procname.t -> bool
+type proc_filter = Typ.Procname.t -> bool
 
-type filters =
-  {
-    path_filter : path_filter;
-    error_filter : error_filter;
-    proc_filter : proc_filter;
-  }
+type filters = {path_filter: path_filter; error_filter: error_filter; proc_filter: proc_filter}
 
-(** Filters that accept everything. *)
 val do_not_filter : filters
+(** Filters that accept everything. *)
 
+val create_filters : Config.analyzer -> filters
 (** Create filters based on the config file *)
-val create_filters : analyzer -> filters
 
-module type Matcher = sig
-  type matcher = DB.source_file -> Procname.t -> bool
-  val load_matcher : Yojson.Basic.json Lazy.t -> matcher
-end
+val never_return_null_matcher : SourceFile.t -> Typ.Procname.t -> bool
 
-module NeverReturnNull : Matcher
+val skip_translation_matcher : SourceFile.t -> Typ.Procname.t -> bool
 
-module SkipTranslationMatcher : Matcher
+val skip_implementation_matcher : SourceFile.t -> Typ.Procname.t -> bool
 
-module SuppressWarningsMatcher : Matcher
+val modeled_expensive_matcher : (string -> bool) -> Typ.Procname.t -> bool
 
-module ModeledExpensiveMatcher : sig
-  type matcher = (string -> bool) -> Procname.t -> bool
-  val load_matcher : Yojson.Basic.json Lazy.t -> matcher
-end
-
+val test : unit -> unit
 (** Load the config file and list the files to report on *)
-val test: unit -> unit
-
-val skip_translation_headers : string list Lazy.t
-
-(** is_checker_enabled [error_name] is [true] if [error_name] is whitelisted in .inferconfig or if
-    it's enabled by default *)
-val is_checker_enabled : string -> bool

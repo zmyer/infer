@@ -8,7 +8,7 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *)
 
-open! Utils
+open! IStd
 
 (** Support for Execution environments *)
 
@@ -18,30 +18,27 @@ type initial
 (** execution environment: a global call graph, and map from procedure names to cfg and tenv *)
 type t
 
-(** freeze the execution environment, so it can be queried *)
-val freeze : initial -> t
-
-(** create a new execution environment *)
-val create : unit -> initial
-
+val add_cg : initial -> DB.source_dir -> unit
 (** add call graph from the source dir in the spec db,
     with relative tenv and cfg, to the execution environment *)
-val add_cg : initial -> DB.source_dir -> Cg.t option
 
-(** get the global call graph *)
+val from_cluster : Cluster.t -> t
+(** Create an exe_env from a cluster *)
+
 val get_cg : t -> Cg.t
+(** get the global call graph *)
 
+val get_source : t -> Typ.Procname.t -> SourceFile.t option
 (** return the source file associated to the procedure *)
-val get_source : t -> Procname.t -> DB.source_file option
 
+val get_tenv : t -> Typ.Procname.t -> Tenv.t
 (** return the type environment associated to the procedure *)
-val get_tenv : t -> Procname.t -> Tenv.t
 
+val get_cfg : t -> Typ.Procname.t -> Cfg.cfg option
 (** return the cfg associated to the procedure *)
-val get_cfg : t -> Procname.t -> Cfg.cfg option
 
+val get_proc_desc : t -> Typ.Procname.t -> Procdesc.t option
 (** return the proc desc associated to the procedure *)
-val get_proc_desc : t -> Procname.t -> Cfg.Procdesc.t option
 
+val iter_files : (SourceFile.t -> Cfg.cfg -> unit) -> t -> unit
 (** [iter_files f exe_env] applies [f] to the source file and tenv and cfg for each file in [exe_env] *)
-val iter_files : (DB.source_file -> Cfg.cfg -> unit) -> t -> unit

@@ -15,6 +15,7 @@ import java.net.URL;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.stream.Stream;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -86,6 +87,12 @@ public class ReturnNotNullable {
     }
   }
 
+  Object tryWithResourcesReturnNullable(String path) throws IOException {
+    try (BufferedReader br = nn(new BufferedReader(new FileReader(path)))) {
+      return returnNullOK();
+    }
+  }
+
   /*
   Check that orNull is modelled and RETURN_OVER_ANNOTATED is not returned.
    */
@@ -121,4 +128,31 @@ public class ReturnNotNullable {
     return cls.getResource(name);
   }
 
+  @DefinitelyNotNullable
+  Object definitelyDoesNotReturnNull() {
+      return new Object();
+  }
+
+  void callsnotnullableMethod() {
+    definitelyDoesNotReturnNull().toString();
+  }
+
+  static class ConditionalAssignment {
+    @Nullable Object f1;
+    static Object test(boolean b) {
+        ConditionalAssignment x = new ConditionalAssignment();
+        if (b) {
+            x.f1 = new Object();
+        }
+        return x.f1; // can be null
+    }
+  }
+
+  Stream<Object> methodUsesLambda(Stream<Object> stream) {
+    return stream.map(x -> null); // Intentionaly not reporting here
+  }
+
+  Object $generatedReturnsNullOk() {
+    return null;
+  }
 }

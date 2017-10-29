@@ -8,38 +8,38 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *)
 
-open! Utils
+open! IStd
 
 (** Implementation of Abstraction Functions *)
 
 (** Abstraction rules discovered *)
 type rules
 
+val abstract : Typ.Procname.t -> Tenv.t -> Prop.normal Prop.t -> Prop.normal Prop.t
 (** Abstract a proposition. *)
-val abstract : Procname.t -> Tenv.t -> Prop.normal Prop.t -> Prop.normal Prop.t
 
+val abstract_junk :
+  ?original_prop:Prop.normal Prop.t -> Typ.Procname.t -> Tenv.t -> Prop.normal Prop.t
+  -> Prop.normal Prop.t
 (** Check whether the prop contains junk.
     If it does, and [Config.allowleak] is true, remove the junk,
     otherwise raise a Leak exception. *)
-val abstract_junk :
-  ?original_prop:Prop.normal Prop.t ->
-  Procname.t -> Tenv.t -> Prop.normal Prop.t -> Prop.normal Prop.t
 
+val abstract_no_symop : Typ.Procname.t -> Tenv.t -> Prop.normal Prop.t -> Prop.normal Prop.t
 (** Abstract a proposition but don't pay a SymOp *)
-val abstract_no_symop : Procname.t -> Tenv.t -> Prop.normal Prop.t -> Prop.normal Prop.t
 
-(** Get the current rules discoveres *)
 val get_current_rules : unit -> rules
+(** Get the current rules discoveres *)
 
+val lifted_abstract : Typ.Procname.t -> Tenv.t -> Propset.t -> Propset.t
 (** Abstract each proposition in [propset] *)
-val lifted_abstract : Procname.t -> Tenv.t -> Propset.t -> Propset.t
 
-(** Remove redundant elements in an array, and check for junk afterwards *)
 val remove_redundant_array_elements :
-  Procname.t -> Tenv.t -> Prop.normal Prop.t -> Prop.normal Prop.t
+  Typ.Procname.t -> Tenv.t -> Prop.normal Prop.t -> Prop.normal Prop.t
+(** Remove redundant elements in an array, and check for junk afterwards *)
 
-(** Reset the abstraction rules discovered *)
 val reset_current_rules : unit -> unit
+(** Reset the abstraction rules discovered *)
 
-(** Set the current rules discovered *)
 val set_current_rules : rules -> unit
+(** Set the current rules discovered *)

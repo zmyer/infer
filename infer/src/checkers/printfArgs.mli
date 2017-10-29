@@ -7,18 +7,6 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *)
 
-open! Utils
+open! IStd
 
-
-type printf_signature = {
-  unique_id: string;
-  format_pos: int;
-  fixed_pos: int list;
-  vararg_pos: int option
-}
-
-val add_printf_like_function : printf_signature -> unit
-
-val check_printf_args_ok : Cfg.Node.t -> Sil.instr -> Procname.t -> Cfg.Procdesc.t -> unit
-
-val callback_printf_args: Callbacks.proc_callback_t
+val callback_printf_args : Callbacks.proc_callback_t

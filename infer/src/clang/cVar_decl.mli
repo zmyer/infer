@@ -7,18 +7,22 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *)
 
-open! Utils
+open! IStd
 
 (** Process variable declarations by saving them as local or global variables.  *)
+
 (** Computes the local variables of a function or method to be added to the procdesc *)
 
-val sil_var_of_decl : CContext.t -> Clang_ast_t.decl -> Procname.t -> Pvar.t
+val sil_var_of_decl : CContext.t -> Clang_ast_t.decl -> Typ.Procname.t -> Pvar.t
 
-val sil_var_of_decl_ref : CContext.t -> Clang_ast_t.decl_ref -> Procname.t -> Pvar.t
+val sil_var_of_decl_ref : CContext.t -> Clang_ast_t.decl_ref -> Typ.Procname.t -> Pvar.t
 
-val add_var_to_locals : Cfg.Procdesc.t -> Clang_ast_t.decl -> Sil.typ -> Pvar.t -> unit
+val add_var_to_locals : Procdesc.t -> Clang_ast_t.decl -> Typ.t -> Pvar.t -> unit
 
-val compute_autorelease_pool_vars : CContext.t -> Clang_ast_t.stmt list -> (Sil.exp * Sil.typ) list
+val compute_autorelease_pool_vars : CContext.t -> Clang_ast_t.stmt list -> (Exp.t * Typ.t) list
 
-val captured_vars_from_block_info : CContext.t -> Clang_ast_t.block_captured_variable list ->
-  (Pvar.t * Sil.typ) list
+val sil_var_of_captured_var :
+  Clang_ast_t.decl_ref -> CContext.t -> Typ.Procname.t -> Pvar.t * Typ.typ
+
+val captured_vars_from_block_info :
+  CContext.t -> Clang_ast_t.block_captured_variable list -> (Pvar.t * Typ.t) list

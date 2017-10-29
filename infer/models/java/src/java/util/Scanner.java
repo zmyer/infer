@@ -9,7 +9,7 @@
 
 package java.util;
 
-import com.facebook.infer.models.InferUndefined;
+import com.facebook.infer.builtins.InferUndefined;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -18,7 +18,7 @@ import java.io.IOException;
 import java.lang.IllegalArgumentException;
 
 
-public class Scanner extends Object {
+public class Scanner {
 
   InputStream src;
   private void init(InputStream source) {

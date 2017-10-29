@@ -7,37 +7,39 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *)
 
-open! Utils
+open! IStd
 
 (** Android lifecycle types and their lifecycle methods that are called by the framework *)
 
-(** return the complete list of (package, lifecycle_classname, lifecycle_methods) trios *)
+val drawable_prefix : string
+(** prefix for Drawable fields in generated resources *)
+
 val get_lifecycles : (string * string * string list) list
+(** return the complete list of (package, lifecycle_classname, lifecycle_methods) trios *)
 
-(** return true if [typ] <: android.content.Context *)
-val is_context : Tenv.t -> Sil.struct_typ -> bool
+val is_autocloseable : Tenv.t -> Typ.Name.t -> bool
 
-(** return true if [struct_typ] <: android.app.Application *)
-val is_application : Tenv.t -> Sil.struct_typ -> bool
+val is_context : Tenv.t -> Typ.Name.t -> bool
+(** return true if [typename] <: android.content.Context *)
 
-(** return true if [struct_typ] <: android.app.Activity *)
-val is_activity : Tenv.t -> Sil.struct_typ -> bool
+val is_application : Tenv.t -> Typ.Name.t -> bool
+(** return true if [typename] <: android.app.Application *)
 
-(** return true if [struct_typ] <: android.view.View *)
-val is_view : Tenv.t -> Sil.struct_typ -> bool
+val is_activity : Tenv.t -> Typ.Name.t -> bool
+(** return true if [typename] <: android.app.Activity *)
 
-val is_fragment : Tenv.t -> Sil.struct_typ -> bool
+val is_view : Tenv.t -> Typ.Name.t -> bool
+(** return true if [typename] <: android.view.View *)
 
+val is_fragment : Tenv.t -> Typ.Name.t -> bool
+
+val is_destroy_method : Typ.Procname.t -> bool
 (** return true if [procname] is a special lifecycle cleanup method *)
-val is_destroy_method : Procname.t -> bool
 
+val get_lifecycle_for_framework_typ_opt :
+  Tenv.t -> Typ.Name.t -> string list -> Typ.Procname.t list
 (** given an Android framework type mangled string [lifecycle_typ] (e.g., android.app.Activity)
     and a list of method names [lifecycle_procs_strs], get the appropriate typ and procnames *)
-val get_lifecycle_for_framework_typ_opt :
-  Tenv.t -> Mangled.t -> string list -> (Sil.struct_typ * Procname.t list) option
 
+val is_android_lib_class : Typ.Name.t -> bool
 (** return true if [class_name] is the name of a class that belong to the Android framework *)
-val is_android_lib_class : Typename.t -> bool
-
-(** Path to the android.jar file containing real code, not just the method stubs as in the SDK *)
-val non_stub_android_jar : unit -> string

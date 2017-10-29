@@ -1,27 +1,23 @@
+# Copyright (c) 2016 - present Facebook, Inc.
+# All rights reserved.
+#
+# This source code is licensed under the BSD style license found in the
+# LICENSE file in the root directory of this source tree. An additional grant
+# of patent rights can be found in the PATENTS file in the same directory.
 
-all:
-	make -C arithmetic
-	make -C assertions
-	make -C attributes
-	make -C custom_error
-	make -C initialization
-	make -C local_vars
-	make -C null_dereference
-	make -C resource_leaks
-	make -C memory_leaks
-	make -C lists
-	make -C dangling_deref
+TESTS_DIR = ../../..
 
-clean:
-	make -C arithmetic clean
-	make -C assertions clean
-	make -C custom_error clean
-	make -C attributes clean
-	make -C initialization clean
-	make -C local_vars clean
-	make -C null_dereference clean
-	make -C resource_leaks clean
-	make -C memory_leaks
-	make -C lists
-	make -C dangling_deref
+ANALYZER = checkers
+CLANG_OPTIONS = -c
+INFER_OPTIONS = \
+  --biabduction-only --report-custom-error --developer-mode --no-filtering --debug-exceptions \
+  --project-root $(TESTS_DIR) \
 
+# we need to disable traces in C tests because assertions/assertion_failure.c has different traces
+# on Linux and OSX because of different implementations of assert() on each platform
+INFERPRINT_OPTIONS = --issues-fields "file,procedure,line_offset,bug_type" --issues-tests
+
+SOURCES = \
+  $(wildcard */*.c) \
+
+include $(TESTS_DIR)/clang.make

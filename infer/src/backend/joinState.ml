@@ -7,13 +7,13 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *)
 
-open! Utils
+open! IStd
 
 (** Object representing the status of the join operation *)
 
-type mode =
-  | Pre
-  | Post
+type mode = Pre | Post [@@deriving compare]
+
+let equal_mode = [%compare.equal : mode]
 
 (** set to true when we are doing join of footprints *)
 let footprint = ref false

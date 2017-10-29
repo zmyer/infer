@@ -8,10 +8,11 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *)
 
-open! Utils
+open! IStd
 
 (** Classify bugs into buckets *)
 
-(** Classify the bucket of an error desc using Location.access and nullable information *)
 val classify_access :
-  Localise.error_desc -> Localise.access option -> Sil.dexp option -> bool -> Localise.error_desc
+  Localise.error_desc -> Localise.access option -> DecompiledExp.t option -> bool
+  -> Localise.error_desc
+(** Classify the bucket of an error desc using Location.access and nullable information *)

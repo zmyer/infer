@@ -9,14 +9,10 @@
 
 package java.io;
 
-import com.facebook.infer.models.InferUndefined;
+import com.facebook.infer.builtins.InferUndefined;
 
 
-public class DataInputStream extends FilterInputStream {
-
-    public DataInputStream(InputStream in) {
-        super(in);
-    }
+public class DataInputStream {
 
     public int read(byte b[]) throws IOException {
         return InferUndefined.can_throw_ioexception_int();

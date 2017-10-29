@@ -1,0 +1,18 @@
+(* to be used with infertop, infer's custom toplevel *)
+
+(* load dependencies *)
+#use "topfind";;
+#thread;;
+#require "cmdliner";;
+#require "core.top";;
+#require "ctypes";;
+#require "ctypes.stubs";;
+#require "sawja";;
+#require "sqlite3";;
+#require "atdgen";;
+#require "xmlm";;
+#require "ANSITerminal";;
+
+open InferStdlib;;
+open InferGenerated;;
+open InferModules;;

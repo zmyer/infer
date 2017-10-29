@@ -45,6 +45,8 @@ ERROR = RED
 HEADER = BRIGHT
 SUCCESS = BLUE_BG + WHITE + BRIGHT
 WARNING = ''
+ADVICE = ''
+LIKE = ''
 
 
 class Invalid_mode(Exception):
@@ -55,13 +57,35 @@ def syntax_highlighting(source_name, mode, s):
     if pygments is None or mode == PLAIN_FORMATTER:
         return s
 
-    lexer = pygments.lexers.get_lexer_for_filename(source_name)
+    try:
+        lexer = pygments.lexers.get_lexer_for_filename(source_name)
+    except pygments.lexers.ClassNotFound:
+        return s
+
     formatter = None
     if mode == TERMINAL_FORMATTER:
         if not sys.stdout.isatty():
             return s
         formatter = pygments.formatters.TerminalFormatter()
-    return pygments.highlight(s, lexer, formatter)
+    # there's a bug in pygments.highlight() where it will remove all starting
+    # newline characters, so we have to add them back!
+    initial_newlines = ''
+    i = 0
+    while (i < len(s) and s[i] == '\n'):
+        initial_newlines += '\n'
+        i += 1
+    # pygments.highlight() also insists that all string end with exactly one
+    # newline character regardless of the input string!
+    final_newlines = ''
+    i = 1
+    while (i <= len(s) and s[-i] == '\n'):
+        final_newlines += '\n'
+        i += 1
+    colorized_string = pygments.highlight(s, lexer, formatter)
+    # strip the result from pygments.highlight() to get rid of the
+    # potentially spurious final newline, and also to continue to
+    # work in case the bugs in pygments.highlight() gets fixed.
+    return initial_newlines + colorized_string.strip('\n') + final_newlines
 
 
 def color(s, color, mode):

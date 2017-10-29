@@ -7,83 +7,81 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *)
 
-open! Utils
-
+open! IStd
 
 (** Module for Type Error messages. *)
 
+module type InstrRefT = sig
+  type t [@@deriving compare]
 
-module type InstrRefT =
-sig
-  type t
-  type generator
-  val create_generator : Cfg.Node.t -> generator
   val equal : t -> t -> bool
+
+  type generator
+
+  val create_generator : Procdesc.Node.t -> generator
+
   val gen : generator -> t
-  val get_node : t -> Cfg.Node.t
+
+  val get_node : t -> Procdesc.Node.t
+
   val hash : t -> int
-  val replace_node : t -> Cfg.Node.t -> t
-end (* InstrRefT *)
+
+  val replace_node : t -> Procdesc.Node.t -> t
+end
+
+(* InstrRefT *)
 
 module InstrRef : InstrRefT
 
-module Strict :
-sig
-  val signature_get_strict : Annotations.annotated_signature -> Sil.annotation option
-end (* Strict *)
+module Strict : sig
+  val signature_get_strict : Tenv.t -> AnnotatedSignature.t -> Annot.t option
+end
 
+(* Strict *)
 
-type origin_descr =
-  string *
-  Location.t option *
-  Annotations.annotated_signature option  (* callee signature *)
+type origin_descr = string * Location.t option * AnnotatedSignature.t option
+
+(* callee signature *)
 
 type parameter_not_nullable =
-  Annotations.annotation *
-  string * (* description *)
-  int * (* parameter number *)
-  Procname.t *
-  Location.t * (* callee location *)
-  origin_descr
+  AnnotatedSignature.annotation
+  * string
+  * (* description *)
+    int
+  * (* parameter number *)
+    Typ.Procname.t
+  * Location.t
+  * (* callee location *)
+    origin_descr
 
 (** Instance of an error *)
 type err_instance =
-  | Condition_redundant of (bool * (string option) * bool)
-  | Inconsistent_subclass_return_annotation of Procname.t * Procname.t
-  | Inconsistent_subclass_parameter_annotation of string * int * Procname.t * Procname.t
-  | Field_not_initialized of Ident.fieldname * Procname.t
-  | Field_not_mutable of Ident.fieldname * origin_descr
-  | Field_annotation_inconsistent of Annotations.annotation * Ident.fieldname * origin_descr
-  | Field_over_annotated of Ident.fieldname * Procname.t
-  | Null_field_access of string option * Ident.fieldname * origin_descr * bool
-  | Call_receiver_annotation_inconsistent
-    of Annotations.annotation * string option * Procname.t * origin_descr
+  | Condition_redundant of (bool * string option * bool)
+  | Inconsistent_subclass_return_annotation of Typ.Procname.t * Typ.Procname.t
+  | Inconsistent_subclass_parameter_annotation of string * int * Typ.Procname.t * Typ.Procname.t
+  | Field_not_initialized of Typ.Fieldname.t * Typ.Procname.t
+  | Field_not_mutable of Typ.Fieldname.t * origin_descr
+  | Field_annotation_inconsistent of AnnotatedSignature.annotation * Typ.Fieldname.t * origin_descr
+  | Field_over_annotated of Typ.Fieldname.t * Typ.Procname.t
+  | Null_field_access of string option * Typ.Fieldname.t * origin_descr * bool
+  | Call_receiver_annotation_inconsistent of
+      AnnotatedSignature.annotation * string option * Typ.Procname.t * origin_descr
   | Parameter_annotation_inconsistent of parameter_not_nullable
-  | Return_annotation_inconsistent of Annotations.annotation * Procname.t * origin_descr
-  | Return_over_annotated of Procname.t
+  | Return_annotation_inconsistent of AnnotatedSignature.annotation * Typ.Procname.t * origin_descr
+  | Return_over_annotated of Typ.Procname.t
 
-
-val node_reset_forall : Cfg.Node.t -> unit
+val node_reset_forall : Procdesc.Node.t -> unit
 
 type st_report_error =
-  Procname.t ->
-  Cfg.Procdesc.t ->
-  string ->
-  Location.t ->
-  ?advice: string option ->
-  ?field_name: Ident.fieldname option ->
-  ?origin_loc: Location.t option ->
-  ?exception_kind: (string -> Localise.error_desc -> exn) ->
-  ?always_report: bool ->
-  string ->
-  unit
+  Typ.Procname.t -> Procdesc.t -> IssueType.t -> Location.t -> ?advice:string option
+  -> ?field_name:Typ.Fieldname.t option -> ?origin_loc:Location.t option
+  -> ?exception_kind:(string -> Localise.error_desc -> exn) -> ?always_report:bool -> string
+  -> unit
 
 val report_error :
-  st_report_error ->
-  (Cfg.Node.t -> Cfg.Node.t) -> Cfg.Node.t ->
-  err_instance -> InstrRef.t option -> Location.t ->
-  Procname.t -> unit
+  Tenv.t -> st_report_error -> (Procdesc.Node.t -> Procdesc.Node.t) -> err_instance
+  -> InstrRef.t option -> Location.t -> Procdesc.t -> unit
 
-val report_forall_checks_and_reset : st_report_error -> Procname.t -> unit
+val report_forall_checks_and_reset : Tenv.t -> st_report_error -> Procdesc.t -> unit
 
 val reset : unit -> unit

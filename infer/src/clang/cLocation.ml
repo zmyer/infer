@@ -7,146 +7,95 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *)
 
-open! Utils
+open! IStd
+open! PVariant
 
 (** Module for function to retrieve the location (file, line, etc) of instructions *)
 
-open CFrontend_utils
-
-(* Inside the json there may be code or type definitions from other files *)
-(* than the one passed as an argument. That current file in the translation is saved*)
-(* in this variable. *)
-let curr_file = ref DB.source_file_empty
-
-let source_file_from_path path =
-  if Filename.is_relative path then
-    (Printing.log_err
-       "ERROR: Path %s is relative. Please pass an absolute path in the -c argument.@."
-       path;
-     exit 1);
-  match Config.project_root with
-  | Some root ->
-      (try
-         DB.rel_source_file_from_abs_path root path
-       with Failure _ ->
-         Printing.log_err "ERROR: %s should be a prefix of %s.@." root path;
-         DB.source_file_from_string path)
-  | None -> DB.source_file_from_string path
-
-let choose_sloc sloc1 sloc2 =
-  match sloc1.Clang_ast_t.sl_file with
-  | Some f when not (DB.source_file_equal (source_file_from_path f) !curr_file) -> sloc2
-  | _ -> sloc1
-
-let choose_sloc_to_update_curr_file sloc1 sloc2 =
-  match sloc2.Clang_ast_t.sl_file with
-  | Some f when DB.source_file_equal (source_file_from_path f) !DB.current_source -> sloc2
-  | _ -> sloc1
-
-let update_curr_file di =
-  let loc_start, loc_end = di.Clang_ast_t.di_source_range in
-  let loc = choose_sloc_to_update_curr_file loc_start loc_end in
-  match loc.Clang_ast_t.sl_file with
-  | Some f -> curr_file := source_file_from_path f
-  | None -> ()
-
-let clang_to_sil_location clang_loc procdesc_opt =
-  let line = match clang_loc.Clang_ast_t.sl_line with
-    | Some l -> l
-    | None -> -1 in
-  let col = match clang_loc.Clang_ast_t.sl_column with
-    | Some c -> c
-    | None -> -1 in
-  let file, nLOC =
-    match procdesc_opt with
-    | Some procdesc ->
-        let proc_loc = Cfg.Procdesc.get_loc procdesc in
-        if (DB.source_file_equal proc_loc.Location.file DB.source_file_empty) then
-          !curr_file, !Config.nLOC
-        else proc_loc.Location.file, proc_loc.Location.nLOC
-    | None ->
-        match clang_loc.Clang_ast_t.sl_file with
-        | Some f ->
-            let file_db = source_file_from_path f in
-            let nloc =
-              if (DB.source_file_equal file_db !DB.current_source) then
-                !Config.nLOC
-              else -1 in
-            file_db, nloc
-        | None -> !curr_file, !Config.nLOC in
-  Location.{line; col; file; nLOC}
-
-let file_in_project file =
-  match Config.project_root with
-  | Some root ->
-      let file_in_project = string_is_prefix root file in
-      let paths = Lazy.force Inferconfig.skip_translation_headers in
-      let file_should_be_skipped =
-        IList.exists
-          (fun path -> string_is_prefix (Filename.concat root path) file)
-          paths in
-      file_in_project && not (file_should_be_skipped)
-  | None -> false
-
-let should_do_frontend_check (loc_start, _) =
-  match loc_start.Clang_ast_t.sl_file with
-  | Some file ->
-      let equal_current_source file =
-        DB.source_file_equal (source_file_from_path file) !DB.current_source in
-      equal_current_source file ||
-      (file_in_project file &&  not Config.testing_mode)
-  | None -> false
-
-(* We translate by default the instructions in the current file.*)
-(* In C++ development, we also translate the headers that are part *)
-(* of the project. However, in testing mode, we don't want to translate *)
-(* the headers because the dot files in the frontend tests should contain nothing *)
-(* else than the source file to avoid conflicts between different versions of the *)
-(* libraries in the CI *)
-let should_translate (loc_start, loc_end) decl_trans_context =
-  let map_path_of pred loc =
-    match loc.Clang_ast_t.sl_file with
-    | Some f -> pred f
-    | None -> false
+let clang_to_sil_location trans_unit_ctx clang_loc =
+  let line = Option.value ~default:(-1) clang_loc.Clang_ast_t.sl_line in
+  let col = Option.value ~default:(-1) clang_loc.Clang_ast_t.sl_column in
+  let file =
+    Option.value_map ~default:trans_unit_ctx.CFrontend_config.source_file
+      ~f:SourceFile.from_abs_path clang_loc.Clang_ast_t.sl_file
   in
+  Location.{line; col; file}
+
+
+let source_file_in_project source_file =
+  let file_in_project = SourceFile.is_under_project_root source_file in
+  let rel_source_file = SourceFile.to_string source_file in
+  let file_should_be_skipped =
+    List.exists
+      ~f:(fun path -> String.is_prefix ~prefix:path rel_source_file)
+      Config.skip_translation_headers
+  in
+  file_in_project && not file_should_be_skipped
+
+
+let should_do_frontend_check trans_unit_ctx (loc_start, _) =
+  match Option.map ~f:SourceFile.from_abs_path loc_start.Clang_ast_t.sl_file with
+  | Some source_file ->
+      SourceFile.equal source_file trans_unit_ctx.CFrontend_config.source_file
+      || source_file_in_project source_file && not Config.testing_mode
+  | None ->
+      false
+
+
+(** We translate by default the instructions in the current file.  In C++ development, we also
+    translate the headers that are part of the project. However, in testing mode, we don't want to
+    translate the headers because the dot files in the frontend tests should contain nothing else
+    than the source file to avoid conflicts between different versions of the libraries. *)
+let should_translate trans_unit_ctx (loc_start, loc_end) decl_trans_context ~translate_when_used =
   let map_file_of pred loc =
-    let path_pred path = pred (source_file_from_path path) in
-    map_path_of path_pred loc
+    match Option.map ~f:SourceFile.from_abs_path loc.Clang_ast_t.sl_file with
+    | Some f ->
+        pred f
+    | None ->
+        false
   in
-  let equal_current_source file =
-    DB.source_file_equal file !DB.current_source
+  (* it's not necessary to compare inodes here because both files come from
+     the same context - they are produced by the same invocation of ASTExporter
+     which uses same logic to produce both files *)
+  let equal_current_source = SourceFile.equal trans_unit_ctx.CFrontend_config.source_file in
+  let equal_header_of_current_source maybe_header =
+    (* SourceFile.of_header will cache calls to filesystem *)
+    let source_of_header_opt = SourceFile.of_header maybe_header in
+    Option.value_map ~f:equal_current_source ~default:false source_of_header_opt
   in
-  let file_in_project = map_path_of file_in_project loc_end
-                        || map_path_of file_in_project loc_start in
-  let file_in_models file = Str.string_match (Str.regexp "^.*/infer/models/cpp/include/") file 0 in
-  let file_in_models = map_path_of file_in_models loc_end
-                       || map_path_of file_in_models loc_start in
-  equal_current_source !curr_file
-  || map_file_of equal_current_source loc_end
-  || map_file_of equal_current_source loc_start
-  || file_in_models
-  || (Config.cxx_experimental && decl_trans_context = `Translation && file_in_project
-      && not Config.testing_mode)
+  let file_in_project =
+    map_file_of source_file_in_project loc_end || map_file_of source_file_in_project loc_start
+  in
+  let translate_on_demand = translate_when_used || file_in_project || Config.models_mode in
+  let file_in_models =
+    map_file_of SourceFile.is_cpp_model loc_end || map_file_of SourceFile.is_cpp_model loc_start
+  in
+  map_file_of equal_current_source loc_end || map_file_of equal_current_source loc_start
+  || file_in_models || Config.cxx && map_file_of equal_header_of_current_source loc_start
+  || Config.cxx && decl_trans_context = `Translation && translate_on_demand
+     && not Config.testing_mode
 
-let should_translate_lib source_range decl_trans_context =
+
+let should_translate_lib trans_unit_ctx source_range decl_trans_context ~translate_when_used =
   not Config.no_translate_libs
-  || should_translate source_range decl_trans_context
+  || should_translate trans_unit_ctx source_range decl_trans_context ~translate_when_used
 
-let get_sil_location_from_range source_range prefer_first =
+
+let is_file_blacklisted file =
+  let paths = Config.skip_analysis_in_path in
+  let is_file_blacklisted =
+    List.exists ~f:(fun path -> Str.string_match (Str.regexp ("^.*/" ^ path)) file 0) paths
+  in
+  is_file_blacklisted
+
+
+let get_sil_location_from_range trans_unit_ctx source_range prefer_first =
   let sloc1, sloc2 = source_range in
-  let sloc = if not prefer_first then sloc2 else choose_sloc sloc1 sloc2 in
-  clang_to_sil_location sloc None
+  let sloc = if not prefer_first then sloc2 else sloc1 in
+  clang_to_sil_location trans_unit_ctx sloc
+
 
 let get_sil_location stmt_info context =
-  let sloc1, sloc2 = stmt_info.Clang_ast_t.si_source_range in
-  let sloc = choose_sloc sloc1 sloc2 in
-  clang_to_sil_location sloc (Some (CContext.get_procdesc context))
+  let sloc1, _ = stmt_info.Clang_ast_t.si_source_range in
+  clang_to_sil_location context.CContext.translation_unit_context sloc1
 
-let check_source_file source_file =
-  let extensions_allowed = [".m"; ".mm"; ".c"; ".cc"; ".cpp"; ".h"] in
-  let allowed = IList.exists (fun ext -> Filename.check_suffix source_file ext) extensions_allowed in
-  if not allowed then
-    (Printing.log_stats "%s"
-       ("\nThe source file "^source_file^
-        " should end with "^(IList.to_string (fun x -> x) extensions_allowed)^"\n\n");
-     assert false)

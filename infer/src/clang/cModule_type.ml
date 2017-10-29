@@ -7,27 +7,32 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *)
 
-open! Utils
+open! IStd
 
-type block_data = CContext.t * Clang_ast_t.type_ptr * Procname.t * (Pvar.t * Sil.typ) list
+type block_data = CContext.t * Clang_ast_t.qual_type * Typ.Procname.t * (Pvar.t * Typ.t) list
 
-type instr_type = [
-  | `ClangStmt of Clang_ast_t.stmt
-  | `CXXConstructorInit of Clang_ast_t.cxx_ctor_initializer
-]
+type instr_type =
+  [`ClangStmt of Clang_ast_t.stmt | `CXXConstructorInit of Clang_ast_t.cxx_ctor_initializer]
 
-type decl_trans_context = [ `DeclTraversal | `Translation ]
+type decl_trans_context = [`DeclTraversal | `Translation]
 
-module type CTranslation =
-sig
-  val instructions_trans : CContext.t -> Clang_ast_t.stmt -> instr_type list ->
-    Cfg.Node.t -> Cfg.Node.t list
+module type CTranslation = sig
+  (** Translates instructions: (statements and expressions) from the ast into sil *)
+
+  val instructions_trans :
+    CContext.t -> Clang_ast_t.stmt -> instr_type list -> Procdesc.Node.t
+    -> is_destructor_wrapper:bool -> Procdesc.Node.t list
+  (** It receives the context, a list of statements from clang ast, list of custom statments to be
+      added before clang statements and the exit node and it returns a list of cfg nodes that
+      represent the translation of the stmts into sil. *)
 end
 
 module type CFrontend = sig
-  val function_decl : Tenv.t -> Cfg.cfg -> Cg.t -> Clang_ast_t.decl ->
-    block_data option -> unit
+  val function_decl :
+    CFrontend_config.translation_unit_context -> Tenv.t -> Cfg.cfg -> Cg.t -> Clang_ast_t.decl
+    -> block_data option -> unit
 
-  val translate_one_declaration : Tenv.t -> Cg.t -> Cfg.cfg ->
-    decl_trans_context -> Clang_ast_t.decl -> unit
+  val translate_one_declaration :
+    CFrontend_config.translation_unit_context -> Tenv.t -> Cg.t -> Cfg.cfg -> decl_trans_context
+    -> Clang_ast_t.decl -> unit
 end

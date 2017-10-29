@@ -690,7 +690,7 @@ public class ResourceLeaks {
   public void parseFromStringAndNotClose(JsonFactory factory) throws IOException {
     UTF8StreamJsonParser parser = null;
     try {
-      parser = (UTF8StreamJsonParser) factory.createParser("[]");
+      parser = (UTF8StreamJsonParser) factory.createParser(new File("[]"));
       Object o = parser.readValueAs(Object.class);
       ignore(o);
     } catch (Exception e) {
@@ -881,6 +881,15 @@ public class ResourceLeaks {
     } catch (IOException e) {
     } finally {
       process.destroy();
+    }
+  }
+
+  void processForciblyDestroyed() throws IOException {
+    Process process = null;
+    try {
+      process = Runtime.getRuntime().exec("");
+    } finally {
+      ignore(process.destroyForcibly());
     }
   }
 

@@ -14,6 +14,12 @@
 #include <stdlib.h>
 #include <time.h>
 
+#ifdef __cplusplus
+// specify C linkage to avoid mangling of names of infer builtins
+// they need to have plain C name so backend can recognise it
+extern "C" {
+#endif
+
 // model returning an arbitrary (nondeterministic) short
 short __infer_nondet_short();
 
@@ -57,18 +63,31 @@ clock_t __infer_nondet_clock_t();
   if (cond)                           \
     while (1)
 
+#ifdef NO_INFER_FAIL
+#define INFER_EXCLUDE_CONDITION_MSG(cond, msg) INFER_EXCLUDE_CONDITION(cond)
+#else
+void __infer_fail(char*);
+#define INFER_EXCLUDE_CONDITION_MSG(cond, msg) \
+  if (cond)                                    \
+    __infer_fail(msg)
+#endif
+
 // builtin: force arr to be an array
 extern void __require_allocated_array(const void* arr);
 
 // builtin: return the size of arr
-extern size_t __get_array_size(const void* arr);
+extern size_t __get_array_length(const void* arr);
 
 // builtin: change the attribute of ret to a file attribute
 extern void __set_file_attribute(void* ret);
 
 // builtin: change the size of the array to size
-extern void __set_array_size(void* ptr, size_t size);
+extern void __set_array_length(void* ptr, size_t size);
 
 // builtin: set the flag to the given value for the procedure where this call
 // appears
 extern void __infer_set_flag(char* flag, char* value);
+
+#ifdef __cplusplus
+} // extern "C"
+#endif

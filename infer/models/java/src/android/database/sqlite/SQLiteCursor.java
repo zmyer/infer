@@ -10,11 +10,11 @@
 package android.database.sqlite;
 
 import android.database.Cursor;
-import com.facebook.infer.models.InferBuiltins;
-import com.facebook.infer.models.InferUndefined;
+import com.facebook.infer.builtins.InferBuiltins;
+import com.facebook.infer.builtins.InferUndefined;
 
 
-public class SQLiteCursor extends Cursor {
+public class SQLiteCursor implements Cursor {
 
     @Deprecated
     public SQLiteCursor(SQLiteDatabase db, SQLiteCursorDriver driver,
@@ -25,16 +25,6 @@ public class SQLiteCursor extends Cursor {
 
     public SQLiteCursor(SQLiteCursorDriver driver, String editTable, SQLiteQuery query) {
         InferBuiltins.__set_file_attribute(this);
-    }
-
-
-    public int getCount() {
-        return InferUndefined.int_undefined();
-    }
-
-
-    public String[] getColumnNames() {
-        return new String[0];
     }
 
     public void close() {

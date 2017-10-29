@@ -8,7 +8,7 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *)
 
-open! Utils
+open! IStd
 
 (** Printers for the analysis results *)
 
@@ -17,37 +17,36 @@ open! Utils
 module LineReader : sig
   type t
 
-  (** create a line reader *)
   val create : unit -> t
+  (** create a line reader *)
 
+  val from_file_linenum_original : t -> SourceFile.t -> int -> string option
   (** get the line from a source file and line number *)
-  val from_file_linenum_original : t -> DB.source_file -> int -> string option
 
+  val from_file_linenum : t -> SourceFile.t -> int -> string option
   (** get the line from a source file and line number looking for the copy of the file in the results dir *)
-  val from_file_linenum : t -> DB.source_file -> int -> string option
 
-  (** get the line from a location looking for the copy of the file in the results dir *)
   val from_loc : t -> Location.t -> string option
+  (** get the line from a location looking for the copy of the file in the results dir *)
 end
 
-(** Current html formatter *)
 val curr_html_formatter : Format.formatter ref
+(** Current html formatter *)
 
-(** Execute the delayed print actions *)
 val force_delayed_prints : unit -> unit
+(** Execute the delayed print actions *)
 
+val node_finish_session : Procdesc.Node.t -> unit
 (** Finish a session, and perform delayed print actions if required *)
-val node_finish_session : Cfg.node -> unit
 
+val node_is_visited : Procdesc.Node.t -> bool * bool
 (** Return true if the node was visited during footprint and during re-execution *)
-val node_is_visited : Cfg.Node.t -> bool * bool
 
+val node_start_session : Procdesc.Node.t -> int -> unit
 (** Start a session, and create a new html fine for the node if it does not exist yet *)
-val node_start_session : Cfg.node -> Location.t -> Procname.t -> int -> unit
 
-(** Write html file for the procedure.
-    The boolean indicates whether to print whole seconds only. *)
-val write_proc_html : bool -> Cfg.Procdesc.t -> unit
+val write_proc_html : Procdesc.t -> unit
+(** Write html file for the procedure. *)
 
-(** Create filename.ext.html for each file in the exe_env. *)
-val write_all_html_files : LineReader.t -> Exe_env.t -> unit
+val write_all_html_files : Cluster.t -> unit
+(** Create filename.ext.html for each file in the cluster. *)

@@ -7,41 +7,30 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *)
 
-open! Utils
+open! IStd
 
-type warning_desc = {
-  name : string; (* name for the checker, this will be a kind of bug *)
-  description : string; (* Description in the error message *)
-  suggestion : string; (* an optional suggestion or correction *)
-  loc : Location.t; (* location in the code *)
-}
+val location_from_stmt : CLintersContext.context -> Clang_ast_t.stmt -> Location.t
 
-(* === Warnings on properties === *)
+val location_from_dinfo : CLintersContext.context -> Clang_ast_t.decl_info -> Location.t
 
-(* Strong Delegate Warning: a property with name delegate should not be declared strong *)
-val strong_delegate_warning : Clang_ast_t.decl_info -> Clang_ast_t.named_decl_info ->
-  Clang_ast_t.obj_c_property_decl_info -> warning_desc option
+val location_from_an : CLintersContext.context -> Ctl_parser_types.ast_node -> Location.t
 
-(* Assing Pointer Warning: a property with a pointer type should not be declared `assign` *)
-val assign_pointer_warning : Clang_ast_t.decl_info -> Clang_ast_t.named_decl_info ->
-  Clang_ast_t.obj_c_property_decl_info -> warning_desc option
+val location_from_decl : CLintersContext.context -> Clang_ast_t.decl -> Location.t
 
-(* Direct Atomic Property access:
-   a property declared atomic should not be accesses directly via its iva *)
-val direct_atomic_property_access_warning :
-  CContext.t -> Clang_ast_t.stmt_info -> Clang_ast_t.named_decl_info option ->
-  warning_desc option
+val ivar_name : Ctl_parser_types.ast_node -> string
 
-(* CXX_REFERENCE_CAPTURED_IN_OBJC_BLOCK: C++ references
-   should not be captured in blocks.  *)
-val captured_cxx_ref_in_objc_block_warning : Clang_ast_t.stmt_info -> (Pvar.t * Sil.typ) list ->
-  warning_desc option
+val cxx_ref_captured_in_block : Ctl_parser_types.ast_node -> string
 
-(* REGISTERED_OBSERVER_BEING_DEALLOCATED: an object is registered in a notification center
-   but not removed before deallocation *)
-val checker_NSNotificationCenter : Clang_ast_t.decl_info -> Clang_ast_t.decl list -> warning_desc option
+val decl_ref_or_selector_name : Ctl_parser_types.ast_node -> string
 
-(* GLOBAL_VARIABLE_INITIALIZED_WITH_FUNCTION_OR_METHOD_CALL warning: a global variable initialization should not *)
-(* contain calls to functions or methods as these can be expensive an delay the starting time *)
-(* of a program *)
-val global_var_init_with_calls_warning : Clang_ast_t.decl -> warning_desc option
+val iphoneos_target_sdk_version : CLintersContext.context -> Ctl_parser_types.ast_node -> string
+
+val available_ios_sdk : Ctl_parser_types.ast_node -> string
+
+val class_available_ios_sdk : Ctl_parser_types.ast_node -> string
+
+val receiver_method_call : Ctl_parser_types.ast_node -> string
+
+val tag_name_of_node : Ctl_parser_types.ast_node -> string
+
+val class_name : Ctl_parser_types.ast_node -> string

@@ -8,123 +8,99 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *)
 
-open! Utils
+open! IStd
+open! PVariant
+module L = Logging
 
 (** mutate the cfg/cg to add dynamic dispatch handling *)
-let add_dispatch_calls cfg cg tenv f_translate_typ_opt =
-  let pname_translate_types pname =
-    match f_translate_typ_opt with
-    | Some f_translate_typ ->
-        (match pname with
-         | Procname.Java pname_java ->
-             let param_type_strs =
-               IList.map Procname.java_type_to_string (Procname.java_get_parameters pname_java) in
-             let receiver_type_str = Procname.java_get_class_name pname_java in
-             let return_type_str = Procname.java_get_return_type pname_java in
-             IList.iter
-               (fun typ_str -> f_translate_typ tenv typ_str)
-               (return_type_str :: (receiver_type_str :: param_type_strs))
-         | Procname.C _
-         | Procname.ObjC_Cpp _
-         | Procname.Block _ ->
-             (* TODO: support this for C/CPP/Obj-C *)
-             ())
-    | None -> () in
+let add_dispatch_calls pdesc cg tenv =
+  let sound_dynamic_dispatch = Config.(equal_dynamic_dispatch dynamic_dispatch Sound) in
   let node_add_dispatch_calls caller_pname node =
-    (* TODO: handle dynamic dispatch for virtual calls as well *)
     let call_flags_is_dispatch call_flags =
       (* if sound dispatch is turned off, only consider dispatch for interface calls *)
-      (Config.sound_dynamic_dispatch && call_flags.Sil.cf_virtual) ||
-      call_flags.Sil.cf_interface in
+      sound_dynamic_dispatch && call_flags.CallFlags.cf_virtual
+      || call_flags.CallFlags.cf_interface
+    in
     let instr_is_dispatch_call = function
-      | Sil.Call (_, _, _, _, call_flags) -> call_flags_is_dispatch call_flags
-      | _ -> false in
-    let has_dispatch_call instrs =
-      IList.exists instr_is_dispatch_call instrs in
+      | Sil.Call (_, _, _, _, call_flags) ->
+          call_flags_is_dispatch call_flags
+      | _ ->
+          false
+    in
+    let has_dispatch_call instrs = List.exists ~f:instr_is_dispatch_call instrs in
     let replace_dispatch_calls = function
-      | Sil.Call (ret_ids, (Sil.Const (Sil.Cfun callee_pname) as call_exp),
-                  (((_, receiver_typ) :: _) as args), loc, call_flags) as instr
-        when call_flags_is_dispatch call_flags ->
+      | Sil.Call
+          ( ret_id
+          , (Exp.Const Const.Cfun callee_pname as call_exp)
+          , ((_, receiver_typ) :: _ as args)
+          , loc
+          , call_flags ) as instr
+        when call_flags_is_dispatch call_flags
+        -> (
           (* the frontend should not populate the list of targets *)
-          assert (call_flags.Sil.cf_targets = []);
-          let receiver_typ_no_ptr = match receiver_typ with
-            | Sil.Tptr (typ', _) ->
-                typ'
-            | _ ->
-                receiver_typ in
+          assert (List.is_empty call_flags.CallFlags.cf_targets) ;
+          let receiver_typ_no_ptr =
+            match receiver_typ.Typ.desc with Typ.Tptr (typ', _) -> typ' | _ -> receiver_typ
+          in
           let sorted_overrides =
             let overrides = Prover.get_overrides_of tenv receiver_typ_no_ptr callee_pname in
-            IList.sort (fun (_, p1) (_, p2) -> Procname.compare p1 p2) overrides in
-          (match sorted_overrides with
-           | ((_, target_pname) :: _) as all_targets ->
-               let targets_to_add =
-                 if Config.sound_dynamic_dispatch then
-                   IList.map snd all_targets
-                 else
-                   (* if sound dispatch is turned off, consider only the first target. we do this
+            List.sort ~cmp:(fun (_, p1) (_, p2) -> Typ.Procname.compare p1 p2) overrides
+          in
+          match sorted_overrides with
+          | (_, target_pname) :: _ as all_targets ->
+              let targets_to_add =
+                if sound_dynamic_dispatch then List.map ~f:snd all_targets
+                else
+                  (* if sound dispatch is turned off, consider only the first target. we do this
                       because choosing all targets is too expensive for everyday use *)
-                   [target_pname] in
-               IList.iter
-                 (fun target_pname ->
-                    pname_translate_types target_pname;
-                    Cg.add_edge cg caller_pname target_pname)
-                 targets_to_add;
-               let call_flags' = { call_flags with Sil.cf_targets = targets_to_add; } in
-               Sil.Call (ret_ids, call_exp, args, loc, call_flags')
-           | [] -> instr)
+                  [target_pname]
+              in
+              List.iter
+                ~f:(fun target_pname -> Cg.add_edge cg caller_pname target_pname)
+                targets_to_add ;
+              let call_flags' = {call_flags with CallFlags.cf_targets= targets_to_add} in
+              Sil.Call (ret_id, call_exp, args, loc, call_flags')
+          | [] ->
+              instr )
+      | instr ->
+          instr
+    in
+    let instrs = Procdesc.Node.get_instrs node in
+    if has_dispatch_call instrs then List.map ~f:replace_dispatch_calls instrs
+      |> Procdesc.Node.replace_instrs node
+  in
+  let pname = Procdesc.get_proc_name pdesc in
+  Procdesc.iter_nodes (node_add_dispatch_calls pname) pdesc
 
-      | instr -> instr in
-    let instrs = Cfg.Node.get_instrs node in
-    if has_dispatch_call instrs then
-      IList.map replace_dispatch_calls instrs
-      |> Cfg.Node.replace_instrs node in
-  let proc_add_dispach_calls pname pdesc =
-    Cfg.Procdesc.iter_nodes (node_add_dispatch_calls pname) pdesc in
-  Cfg.iter_proc_desc cfg proc_add_dispach_calls
 
 (** add instructions to perform abstraction *)
-let add_abstraction_instructions cfg =
-  let open Cfg in
+let add_abstraction_instructions pdesc =
+  let open Procdesc in
   (* true if there is a succ node s.t.: it is an exit node, or the succ of >1 nodes *)
   let converging_node node =
-    let is_exit node = match Node.get_kind node with
-      | Node.Exit_node _ -> true
-      | _ -> false in
+    let is_exit node = match Node.get_kind node with Node.Exit_node _ -> true | _ -> false in
     let succ_nodes = Node.get_succs node in
-    if IList.exists is_exit succ_nodes then true
-    else match succ_nodes with
-      | [] -> false
-      | [h] -> IList.length (Node.get_preds h) > 1
-      | _ -> false in
+    if List.exists ~f:is_exit succ_nodes then true
+    else
+      match succ_nodes with [] -> false | [h] -> List.length (Node.get_preds h) > 1 | _ -> false
+  in
   let node_requires_abstraction node =
     match Node.get_kind node with
-    | Node.Start_node _
-    | Node.Join_node ->
+    | Node.Start_node _ | Node.Join_node ->
         false
-    | Node.Exit_node _
-    | Node.Stmt_node _
-    | Node.Prune_node _
-    | Node.Skip_node _ ->
-        converging_node node in
-  let all_nodes = Node.get_all_nodes cfg in
+    | Node.Exit_node _ | Node.Stmt_node _ | Node.Prune_node _ | Node.Skip_node _ ->
+        converging_node node
+  in
   let do_node node =
     let loc = Node.get_last_loc node in
-    if node_requires_abstraction node then Node.append_instrs node [Sil.Abstract loc] in
-  IList.iter do_node all_nodes
+    if node_requires_abstraction node then Node.append_instrs node [Sil.Abstract loc]
+  in
+  Procdesc.iter_nodes do_node pdesc
 
-module BackwardCfg = ProcCfg.Backward(ProcCfg.Exceptional)
 
-module LivenessAnalysis =
-  AbstractInterpreter.Make
-    (BackwardCfg)
-    (Scheduler.ReversePostorder)
-    (Liveness.Domain)
-    (Liveness.TransferFunctions)
-
-module VarDomain = AbstractDomain.FiniteSet(Var.Set)
-
-(* (reaching non-nullified vars) * (vars to nullify) *)
-module NullifyDomain = AbstractDomain.Pair (VarDomain) (VarDomain)
+module BackwardCfg = ProcCfg.Backward (ProcCfg.Exceptional)
+module LivenessAnalysis = AbstractInterpreter.Make (BackwardCfg) (Liveness.TransferFunctions)
+module VarDomain = Liveness.Domain
 
 (** computes the non-nullified reaching definitions at the end of each node by building on the
     results of a liveness analysis to be precise, what we want to compute is:
@@ -135,106 +111,155 @@ module NullifyDomain = AbstractDomain.Pair (VarDomain) (VarDomain)
     each pvar in to_nullify afer we finish the analysis. Nullify instructions speed up the analysis
     by enabling it to GC state that will no longer be read. *)
 module NullifyTransferFunctions = struct
-  type astate = NullifyDomain.astate
-  type extras = LivenessAnalysis.inv_map
-  type node_id = BackwardCfg.id
+  (* (reaching non-nullified vars) * (vars to nullify) *)
+  module Domain = AbstractDomain.Pair (VarDomain) (VarDomain)
+  module CFG = ProcCfg.Exceptional
 
-  let postprocess ((reaching_defs, _) as astate) node_id { ProcData.extras; } =
+  type extras = LivenessAnalysis.invariant_map
+
+  let postprocess ((reaching_defs, _) as astate) node {ProcData.extras} =
+    let node_id = Procdesc.Node.get_id (CFG.underlying_node node) in
     match LivenessAnalysis.extract_state node_id extras with
-    (* note: because the analysis backward, post and pre are reversed *)
-    | Some { LivenessAnalysis.post = live_before; pre = live_after; } ->
+    (* note: because the analysis is backward, post and pre are reversed *)
+    | Some {AbstractInterpreter.post= live_before; pre= live_after} ->
         let to_nullify = VarDomain.diff (VarDomain.union live_before reaching_defs) live_after in
         let reaching_defs' = VarDomain.diff reaching_defs to_nullify in
         (reaching_defs', to_nullify)
-    | None -> astate
-
-  let exec_instr ((active_defs, to_nullify) as astate) _ = function
-    | Sil.Letderef (lhs_id, _, _, _) ->
-        VarDomain.add (Var.LogicalVar lhs_id) active_defs, to_nullify
-    | Sil.Call (lhs_ids, _, _, _, _) ->
-        let active_defs' =
-          IList.fold_left
-            (fun acc id -> VarDomain.add (Var.LogicalVar id) acc)
-            active_defs
-            lhs_ids in
-        active_defs', to_nullify
-    | Sil.Set (Sil.Lvar lhs_pvar, _, _, _) ->
-        VarDomain.add (Var.ProgramVar lhs_pvar) active_defs, to_nullify
-    | Sil.Set _ | Prune _ | Declare_locals _ | Stackop _ | Remove_temps _
-    | Abstract _ ->
+    | None ->
         astate
-    | Sil.Nullify _ ->
-        failwith "Should not add nullify instructions before running nullify analysis!"
+
+
+  let cache_node = ref (Procdesc.Node.dummy None)
+
+  let cache_instr = ref Sil.skip_instr
+
+  let last_instr_in_node node =
+    let get_last_instr () =
+      let instrs = CFG.instrs node in
+      match List.rev instrs with instr :: _ -> instr | [] -> Sil.skip_instr
+    in
+    if phys_equal node !cache_node then !cache_instr
+    else
+      let last_instr = get_last_instr () in
+      cache_node := node ;
+      cache_instr := last_instr ;
+      last_instr
+
+
+  let is_last_instr_in_node instr node = phys_equal (last_instr_in_node node) instr
+
+  let exec_instr ((active_defs, to_nullify) as astate) extras node instr =
+    let astate' =
+      match instr with
+      | Sil.Load (lhs_id, _, _, _) ->
+          (VarDomain.add (Var.of_id lhs_id) active_defs, to_nullify)
+      | Sil.Call (lhs_id, _, _, _, _) ->
+          let active_defs' =
+            Option.value_map
+              ~f:(fun (id, _) -> VarDomain.add (Var.of_id id) active_defs)
+              ~default:active_defs lhs_id
+          in
+          (active_defs', to_nullify)
+      | Sil.Store (Exp.Lvar lhs_pvar, _, _, _) ->
+          (VarDomain.add (Var.of_pvar lhs_pvar) active_defs, to_nullify)
+      | Sil.Store _ | Prune _ | Declare_locals _ | Remove_temps _ | Abstract _ ->
+          astate
+      | Sil.Nullify _ ->
+          L.(die InternalError)
+            "Should not add nullify instructions before running nullify analysis!"
+    in
+    if is_last_instr_in_node instr node then postprocess astate' node extras else astate'
+
 end
 
 module NullifyAnalysis =
-  AbstractInterpreter.Make
-    (ProcCfg.Exceptional)
-    (Scheduler.ReversePostorder)
-    (NullifyDomain)
-    (NullifyTransferFunctions)
+  AbstractInterpreter.MakeNoCFG
+    (Scheduler.ReversePostorder (ProcCfg.Exceptional)) (NullifyTransferFunctions)
 
-let add_nullify_instrs tenv _ pdesc =
-  let liveness_proc_cfg = BackwardCfg.from_pdesc pdesc in
-  let proc_data_no_extras = ProcData.make_default pdesc tenv in
-  let liveness_inv_map = LivenessAnalysis.exec_cfg liveness_proc_cfg proc_data_no_extras in
-
+let add_nullify_instrs pdesc tenv liveness_inv_map =
   let address_taken_vars =
-    if Procname.is_java (Cfg.Procdesc.get_proc_name pdesc)
-    then AddressTaken.Domain.empty (* can't take the address of a variable in Java *)
+    if Typ.Procname.is_java (Procdesc.get_proc_name pdesc) then AddressTaken.Domain.empty
+      (* can't take the address of a variable in Java *)
     else
-      match AddressTaken.Analyzer.compute_post proc_data_no_extras with
-      | Some post -> post
-      | None -> AddressTaken.Domain.empty in
-
+      let initial = AddressTaken.Domain.empty in
+      match AddressTaken.Analyzer.compute_post (ProcData.make_default pdesc tenv) ~initial with
+      | Some post ->
+          post
+      | None ->
+          AddressTaken.Domain.empty
+  in
   let nullify_proc_cfg = ProcCfg.Exceptional.from_pdesc pdesc in
   let nullify_proc_data = ProcData.make pdesc tenv liveness_inv_map in
-  let nullify_inv_map = NullifyAnalysis.exec_cfg nullify_proc_cfg nullify_proc_data in
-
+  let initial = (VarDomain.empty, VarDomain.empty) in
+  let nullify_inv_map =
+    NullifyAnalysis.exec_cfg nullify_proc_cfg nullify_proc_data ~initial ~debug:false
+  in
   (* only nullify pvars that are local; don't nullify those that can escape *)
-  let is_local pvar =
-    not (Pvar.is_return pvar || Pvar.is_global pvar) in
-
+  let is_local pvar = not (Pvar.is_return pvar || Pvar.is_global pvar) in
   let node_add_nullify_instructions node pvars =
-    let loc = Cfg.Node.get_last_loc node in
+    let loc = Procdesc.Node.get_last_loc node in
     let nullify_instrs =
-      IList.filter is_local pvars
-      |> IList.map (fun pvar -> Sil.Nullify (pvar, loc)) in
-    if nullify_instrs <> []
-    then Cfg.Node.append_instrs node (IList.rev nullify_instrs) in
-
+      List.filter ~f:is_local pvars |> List.map ~f:(fun pvar -> Sil.Nullify (pvar, loc))
+    in
+    if nullify_instrs <> [] then Procdesc.Node.append_instrs node (List.rev nullify_instrs)
+  in
   let node_add_removetmps_instructions node ids =
     if ids <> [] then
-      let loc = Cfg.Node.get_last_loc node in
-      Cfg.Node.append_instrs node [Sil.Remove_temps (IList.rev ids, loc)] in
-
-  IList.iter
-    (fun node ->
-       match NullifyAnalysis.extract_post (ProcCfg.Exceptional.id node) nullify_inv_map with
-       | Some (_, to_nullify) ->
-           let pvars_to_nullify, ids_to_remove =
-             Var.Set.fold
-               (fun var (pvars_acc, ids_acc) -> match var with
-                  (* we nullify all address taken variables at the end of the procedure *)
-                  | ProgramVar pvar when not (AddressTaken.Domain.mem pvar address_taken_vars) ->
-                      pvar :: pvars_acc, ids_acc
-                  | LogicalVar id ->
-                      pvars_acc, id :: ids_acc
-                  | _ -> pvars_acc, ids_acc)
-               to_nullify
-               ([], []) in
-           node_add_removetmps_instructions node ids_to_remove;
-           node_add_nullify_instructions node pvars_to_nullify
-       | None -> ())
-    (ProcCfg.Exceptional.nodes nullify_proc_cfg);
+      let loc = Procdesc.Node.get_last_loc node in
+      Procdesc.Node.append_instrs node [Sil.Remove_temps (List.rev ids, loc)]
+  in
+  List.iter
+    ~f:(fun node ->
+      match NullifyAnalysis.extract_post (ProcCfg.Exceptional.id node) nullify_inv_map with
+      | Some (_, to_nullify) ->
+          let pvars_to_nullify, ids_to_remove =
+            VarDomain.fold
+              (fun var (pvars_acc, ids_acc) ->
+                match Var.to_exp var with
+                (* we nullify all address taken variables at the end of the procedure *)
+                | Exp.Lvar pvar
+                  when not (AddressTaken.Domain.mem pvar address_taken_vars) ->
+                    (pvar :: pvars_acc, ids_acc)
+                | Exp.Var id ->
+                    (pvars_acc, id :: ids_acc)
+                | _ ->
+                    (pvars_acc, ids_acc))
+              to_nullify ([], [])
+          in
+          node_add_removetmps_instructions node ids_to_remove ;
+          node_add_nullify_instructions node pvars_to_nullify
+      | None ->
+          ())
+    (ProcCfg.Exceptional.nodes nullify_proc_cfg) ;
   (* nullify all address taken variables *)
-  if not (AddressTaken.Domain.is_empty address_taken_vars)
-  then
+  if not (AddressTaken.Domain.is_empty address_taken_vars) then
     let exit_node = ProcCfg.Exceptional.exit_node nullify_proc_cfg in
     node_add_nullify_instructions exit_node (AddressTaken.Domain.elements address_taken_vars)
 
-let doit ?(f_translate_typ=None) cfg cg tenv =
-  Cfg.iter_proc_desc cfg (add_nullify_instrs tenv);
-  if !Config.curr_language = Config.Java
-  then add_dispatch_calls cfg cg tenv f_translate_typ;
-  add_abstraction_instructions cfg;
+
+let do_liveness pdesc tenv =
+  let liveness_proc_cfg = BackwardCfg.from_pdesc pdesc in
+  let initial = Liveness.Domain.empty in
+  let liveness_inv_map =
+    LivenessAnalysis.exec_cfg liveness_proc_cfg
+      (ProcData.make_default pdesc tenv)
+      ~initial ~debug:false
+  in
+  add_nullify_instrs pdesc tenv liveness_inv_map ;
+  Procdesc.signal_did_preanalysis pdesc
+
+
+let do_abstraction pdesc =
+  add_abstraction_instructions pdesc ;
+  Procdesc.signal_did_preanalysis pdesc
+
+
+let do_dynamic_dispatch pdesc cg tenv =
+  ( match Config.dynamic_dispatch with
+  | Interface | Sound ->
+      let pname = Procdesc.get_proc_name pdesc in
+      if Typ.Procname.is_java pname then add_dispatch_calls pdesc cg tenv
+  | NoDynamicDispatch | Lazy ->
+      () ) ;
+  Procdesc.signal_did_preanalysis pdesc
+

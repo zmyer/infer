@@ -9,15 +9,20 @@
 
 package codetoanalyze.java.infer;
 
+import android.annotation.SuppressLint;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.text.TextUtils;
 
+import com.facebook.infer.annotation.Assertions;
+
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import java.io.File;
@@ -171,7 +176,7 @@ public class NullPointerExceptions {
     }
   }
 
-  public void noNullPointerExceptionAfterSkipFunction() {
+  public void FP_noNullPointerExceptionAfterSkipFunction() {
     String t = new String("Hello!");
     String s = t.toString();
     genericMethodSomewhereCheckingForNull(s);
@@ -195,13 +200,6 @@ public class NullPointerExceptions {
 
   Integer NPEvalueOfFromHashmapGood(HashMap<Integer,Integer> h, int position) {
     return h.get(position);
-  }
-
-  static void ReturnedValueOfImmutableListOf() {
-    ImmutableList<Object> l = ImmutableList.of();
-    if (l == null) {
-      l.toString();
-    }
   }
 
   void nullPointerExceptionInArrayLengthLoop(Object[] arr) {
@@ -339,7 +337,6 @@ public class NullPointerExceptions {
     }
   }
 
-
   void nullableNonNullStringAfterTextUtilsIsEmptyCheckShouldNotCauseNPE(@Nullable String str) {
     if (!TextUtils.isEmpty(str)) {
       str.length();
@@ -430,6 +427,12 @@ public class NullPointerExceptions {
     }
   }
 
+  void assumeUndefNullableIdempotentOk() {
+    if (undefNullableRet() != null) {
+      undefNullableRet().toString();
+    }
+  }
+
   public Object undefNullableWrapper() {
     return undefNullableRet();
   }
@@ -444,7 +447,6 @@ public class NullPointerExceptions {
     }
     return 3;
   }
-
 
   public void testNullablePrecision() {
     Object ret = undefNullableRet();
@@ -478,7 +480,7 @@ public class NullPointerExceptions {
     derefUndefinedCallee().toString();
   }
 
-  @SuppressWarnings("null") // TODO(#8647398): Add support for @SuppressWarnings with Ant
+  @SuppressLint("NULL_DEREFERENCE")
   void shouldNotReportNPE() {
     Object o = null;
     o.toString();
@@ -497,6 +499,22 @@ public class NullPointerExceptions {
 
   native Object unknownFunc();
 
+  void nullDerefernceReturnOfSkippedFunctionBad() {
+    Object object = unknownFunc();
+    if (object == null) {
+      object.toString();
+    }
+  }
+
+  native @Nonnull Object doesNotReturnNull();
+
+  void noNPEWhenCallingSkippedNonnullAnnotatedMethodGood() {
+    Object object = doesNotReturnNull();
+    if (object == null) {
+      object.toString();
+    }
+  }
+
   Object callUnknownFunc() {
     return unknownFunc();
   }
@@ -509,6 +527,14 @@ public class NullPointerExceptions {
   void dontReportOnNullableIndirectReassignmentToUnknown(@Nullable Object o) {
     o = callUnknownFunc();
     o.toString();
+  }
+
+  @Nullable Object wrapUnknownFuncWithNullable() {
+    return unknownFunc();
+  }
+
+  void deferenceNullableMethodCallingSkippedMethodBad() {
+    wrapUnknownFuncWithNullable().toString();
   }
 
   String nullTryLock(FileChannel chan) throws IOException {
@@ -556,6 +582,67 @@ public class NullPointerExceptions {
     String s = l.toString();
     s = null;
     s.toString(); // Expect NPE here
+  }
+
+  void optionalNPE(Optional<Object> o) {
+    o.orNull().toString();
+  }
+
+  void stringConstantEqualsTrueNotNPE() {
+    final String c1 = "Test string!";
+    final String c2 = "Test string!";
+    String s = null;
+    if(c1.equals(c1)) {
+      s = "safe";
+    }
+    s.toString(); // No NPE
+    s = null;
+    if(c1.equals(c2)) {
+      s = "safe";
+    }
+    s.toString(); // No NPE
+  }
+
+  void stringConstantEqualsFalseNotNPE_FP() {
+    // This won't actually cause an NPE, but our current model for String.equals
+    // returns boolean_undefined for all cases other than String constant
+    // equality. Consider handling constant inequality in the future.
+    final String c1 = "Test string 1";
+    final String c2 = "Test string 2";
+    String s = null;
+    if(!c1.equals(c2)) {
+      s = "safe";
+    }
+    s.toString(); // No NPE
+  }
+
+  String getString2() {
+    return "string 2";
+  }
+
+  void stringVarEqualsFalseNPE() {
+    final String c1 = "Test string 1";
+    String c2 = "Test " + getString2();
+    String s = null;
+    if(!c1.equals(c2)) {
+      s.toString(); // NPE
+    }
+  }
+
+  String assertParameterNotNullableOk(@Nullable Object object) {
+    return Assertions.assertNotNull(object).toString();
+  }
+
+  interface I {
+    @Nullable Object mObject = null;
+  }
+
+  class E implements I {
+
+    void dereferenceNullableInterfaceFieldBad() {
+      mObject.toString();
+    }
+
   }
 
 }

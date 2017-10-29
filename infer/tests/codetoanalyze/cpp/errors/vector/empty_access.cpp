@@ -14,6 +14,16 @@ int access_empty() {
   return vec[0];
 }
 
+int access_empty_front_bad() {
+  const std::vector<int> vec;
+  return vec.front();
+}
+
+int access_empty_back_bad() {
+  const std::vector<int> vec;
+  return vec.back();
+}
+
 int access_nonempty() {
   const std::vector<int> vec(1);
   return vec[0];
@@ -34,6 +44,12 @@ int resize0_empty() {
 int resize1_nonempty() {
   std::vector<int> vec;
   vec.resize(1);
+  return vec[0];
+}
+
+int resize_n_nonempty(int n) {
+  std::vector<int> vec;
+  vec.resize(n);
   return vec[0];
 }
 
@@ -69,32 +85,28 @@ int assign_nonempty() {
   return vec2[0];
 }
 
-int empty_check_nonempty() {
-  std::vector<int> vec;
+int empty_check_nonempty(std::vector<int>& vec) {
   if (vec.empty()) {
     return 1;
   }
   return vec[0];
 }
 
-int empty_check_nonempty2() {
-  std::vector<int> vec;
+int empty_check_nonempty2(std::vector<int>& vec) {
   if (vec.empty()) {
     vec.push_back(1);
   }
   return vec[0];
 }
 
-int empty_check_access_empty() {
-  std::vector<int> vec;
+int empty_check_access_empty(std::vector<int>& vec) {
   if (vec.empty()) {
     return vec[0];
   }
   return 1;
 }
 
-int size_check0_empty() {
-  std::vector<int> vec;
+int size_check0_empty(std::vector<int>& vec) {
   if (vec.size() == 0) {
     return vec[0];
   }
@@ -108,3 +120,49 @@ int size_check1_nonempty() {
   }
   return 1;
 }
+
+int vector_param_access(std::vector<int>& v) {
+  return v.back(); // shouldn't report anything here
+}
+
+int vector_as_param_empty() {
+  std::vector<int> v;
+  return vector_param_access(v);
+}
+
+int vector_as_param_nonempty() {
+  std::vector<int> v(1);
+  return vector_param_access(v);
+}
+
+int vector_param_by_value_access(std::vector<int> v) {
+  return v.back(); // shouldn't report anything here
+}
+
+int vector_as_param_by_value_empty() {
+  std::vector<int> v;
+  return vector_param_by_value_access(v);
+}
+
+void vector_param_by_value_clear(std::vector<int> v) { v.clear(); }
+
+int vector_as_param_by_value_clear_no_crash() {
+  std::vector<int> v(1);
+  vector_param_by_value_clear(v);
+  return v[0];
+}
+
+void vector_param_clear(std::vector<int>& v) { v.clear(); }
+
+int vector_as_param_clear() {
+  std::vector<int> v(1);
+  vector_param_clear(v);
+  return v[0];
+}
+
+std::vector<int> get_vector() {
+  std::vector<int> x;
+  return x;
+}
+
+int getter_empty() { return get_vector()[0]; }

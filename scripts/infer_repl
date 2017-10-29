@@ -1,0 +1,28 @@
+#!/bin/bash
+
+## Wrapper around infertop. To build infertop, run `make toplevel`.
+
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+# where to find toplevel.bc, can be overridden
+TOPLEVEL_DIR=${TOPLEVEL_DIR:-"$SCRIPT_DIR"/../infer/src/_build/default}
+
+# The -init option is effective only in interactive mode.
+# In batch mode, scripts need to import toplevel_init themselves.
+# It can be done by adding #use "toplevel_init";; to the beginning
+# of a script.
+# NOTE: $SCRIPT_DIR is added search path for batch scripts
+#       so they can be located anywhere and still find toplevel_init
+#       file. In interactive mode $SCRIPT_DIR isn't needed
+
+set -x
+# infertop expects to be run from where jbuild is located
+cd "$SCRIPT_DIR"/../infer
+"$TOPLEVEL_DIR"/infertop.bc \
+  -init "$SCRIPT_DIR"/toplevel_init \
+  -I "$TOPLEVEL_DIR" \
+  -I "$TOPLEVEL_DIR"/atd \
+  -I "$TOPLEVEL_DIR"/istd \
+  -I "$TOPLEVEL_DIR"/scripts \
+  -I "$SCRIPT_DIR" \
+  "$@"

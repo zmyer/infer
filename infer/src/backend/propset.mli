@@ -8,7 +8,7 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *)
 
-open! Utils
+open! IStd
 
 (** Functions for Sets of Propositions with and without sharing *)
 
@@ -18,65 +18,65 @@ open! Utils
     The invariant is maintaned that Prop.prop_rename_primed_footprint_vars is called on any prop added to the set. *)
 type t
 
-(** Compare propsets *)
 val compare : t -> t -> int
+(** Compare propsets *)
 
+val singleton : Tenv.t -> Prop.normal Prop.t -> t
 (** Singleton set. *)
-val singleton : Prop.normal Prop.t -> t
 
-(** Set membership. *)
 val mem : Prop.normal Prop.t -> t -> bool
+(** Set membership. *)
 
-(** Set union. *)
 val union : t -> t -> t
+(** Set union. *)
 
-(** Set intersection *)
 val inter : t -> t -> t
+(** Set intersection *)
 
+val add : Tenv.t -> Prop.normal Prop.t -> t -> t
 (** Add [prop] to propset. *)
-val add : Prop.normal Prop.t -> t -> t
 
-(** Set difference. *)
 val diff : t -> t -> t
+(** Set difference. *)
 
-(** The empty set of propositions. *)
 val empty : t
+(** The empty set of propositions. *)
 
-(** Size of the set *)
 val size : t -> int
+(** Size of the set *)
 
-val from_proplist : Prop.normal Prop.t list -> t
+val from_proplist : Tenv.t -> Prop.normal Prop.t list -> t
 
 val to_proplist : t -> Prop.normal Prop.t list
 
+val map : Tenv.t -> (Prop.normal Prop.t -> Prop.normal Prop.t) -> t -> t
 (** Apply function to all the elements of the propset. *)
-val map : (Prop.normal Prop.t -> Prop.normal Prop.t) -> t -> t
 
+val map_option : Tenv.t -> (Prop.normal Prop.t -> Prop.normal Prop.t option) -> t -> t
 (** Apply function to all the elements of the propset, removing those where it returns [None]. *)
-val map_option : (Prop.normal Prop.t -> Prop.normal Prop.t option) -> t -> t
 
+val fold : ('a -> Prop.normal Prop.t -> 'a) -> 'a -> t -> 'a
 (** [fold f pset a] computes [(f pN ... (f p2 (f p1 a))...)],
     where [p1 ... pN] are the elements of pset, in increasing
     order. *)
-val fold : ('a -> Prop.normal Prop.t -> 'a) -> 'a -> t -> 'a
 
+val iter : (Prop.normal Prop.t -> unit) -> t -> unit
 (** [iter f pset] computes (f p1;f p2;..;f pN)
     where [p1 ... pN] are the elements of pset, in increasing order. *)
-val iter : (Prop.normal Prop.t -> unit) -> t -> unit
 
 val partition : (Prop.normal Prop.t -> bool) -> t -> t * t
 
 val subseteq : t -> t -> bool
 
-(** Set emptiness check. *)
 val is_empty : t -> bool
+(** Set emptiness check. *)
 
 val filter : (Prop.normal Prop.t -> bool) -> t -> t
 
 (** {2 Pretty print} *)
 
+val pp : Pp.env -> Prop.normal Prop.t -> Format.formatter -> t -> unit
 (** Pretty print a set of propositions, obtained from the given prop. *)
-val pp : printenv -> Prop.normal Prop.t -> Format.formatter -> t -> unit
 
-(** dump a propset coming form the given initial prop *)
 val d : Prop.normal Prop.t -> t -> unit
+(** dump a propset coming form the given initial prop *)

@@ -7,9 +7,9 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *)
 
-open! Utils
+open! IStd
 
 (** Automatically create a harness method to exercise code under test *)
 
-(** Generate a harness method for exe_env and add it to the execution environment *)
 val create_harness : Cfg.cfg -> Cg.t -> Tenv.t -> unit
+(** Generate a harness method for exe_env and add it to the execution environment *)

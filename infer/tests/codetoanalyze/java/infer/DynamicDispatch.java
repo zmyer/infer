@@ -27,10 +27,12 @@ public class DynamicDispatch {
     i.foo().toString();
   }
 
-  // TODO: this test currently fails, but will pass with handling of dynamic dispatch
   static void interfaceShouldNotCauseFalseNegativeHard(Interface i) {
-    // should be a warning since Impl's implementation of foo returns null
     i.foo().toString();
+  }
+
+  static void callWithBadImplementation(Impl impl) {
+    interfaceShouldNotCauseFalseNegativeHard(impl);
   }
 
   static class Supertype {
@@ -65,10 +67,92 @@ public class DynamicDispatch {
     o.bar().toString();
   }
 
-  // TODO: this test currently fails, but will pass with handling of dynamic dispatch
-  static void dynamicDispatchShouldNotCauseFalseNegativeHardTODO(Supertype o) {
-    // should report a warning because Subtype's implementation of foo() can return null;
+  static void dynamicDispatchShouldNotReportWhenCallingSupertype(Supertype o) {
+    // should not report a warning because the Supertype implementation
+    // of foo() does not return null
     o.foo().toString();
+  }
+
+  static void dynamicDispatchShouldReportWhenCalledWithSubtypeParameter(Subtype o) {
+    // should report a warning because the Subtype implementation
+    // of foo() returns null
+    dynamicDispatchShouldNotReportWhenCallingSupertype(o);
+  }
+
+  static Object dynamicDispatchWrapperFoo(Supertype o) {
+    return o.foo();
+  }
+
+  static Object dynamicDispatchWrapperBar(Supertype o) {
+    return o.bar();
+  }
+
+  static void dynamicDispatchCallsWrapperWithSupertypeOkay() {
+    // Should not report because Supertype.foo() does not return null
+    Supertype o = new Supertype();
+    dynamicDispatchWrapperFoo(o).toString();
+  }
+
+  static void dynamicDispatchCallsWrapperWithSupertypeBad() {
+    // Should report because Supertype.bar() returns null
+    Supertype o = new Supertype();
+    dynamicDispatchWrapperBar(o).toString();
+  }
+
+  static void dynamicDispatchCallsWrapperWithSubtypeBad() {
+    // Should report because Subtype.foo() returns null
+    Supertype o = new Subtype();
+    dynamicDispatchWrapperFoo(o).toString();
+  }
+
+  static void dynamicDispatchCallsWrapperWithSubtypeOkay() {
+    // Should not report because Subtype.bar() does not returns null
+    Supertype o = new Subtype();
+    dynamicDispatchWrapperBar(o).toString();
+  }
+
+  static class WithField {
+
+    Supertype mField;
+
+    WithField(Supertype t) {
+      mField = t;
+    }
+
+    static void dispatchOnFieldGood() {
+      Supertype subtype = new Subtype();
+      WithField object = new WithField(subtype);
+      object.mField.bar().toString();
+    }
+
+    static void dispatchOnFieldBad() {
+      Supertype subtype = new Subtype();
+      WithField object = new WithField(subtype);
+      object.mField.foo().toString();
+    }
+
+  }
+
+  private Object callFoo(Supertype o) {
+    return o.foo();
+  }
+
+  void dynamicResolutionWithPrivateMethodBad() {
+    Supertype subtype = new Subtype();
+    callFoo(subtype).toString();
+  }
+
+  Object variadicMethod(Supertype... args) {
+    if (args.length == 0) {
+      return null;
+    } else {
+      return args[0].foo();
+    }
+  }
+
+  void dynamicResolutionWithVariadicMethodBad() {
+    Supertype subtype = new Subtype();
+    variadicMethod(subtype, null, null).toString();
   }
 
 }

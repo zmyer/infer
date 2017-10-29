@@ -8,13 +8,11 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *)
 
-open! Utils
-
+open! IStd
 open Javalib_pack
 
-
+val translate_item : (JBasics.annotation * Javalib.visibility) list -> Annot.Item.t
 (** Translate an item annotation. *)
-val translate_item : (JBasics.annotation * Javalib.visibility) list -> Sil.item_annotation
 
+val translate_method : Javalib.method_annotations -> Annot.Method.t
 (** Translate a method annotation. *)
-val translate_method : Procname.java -> Javalib.method_annotations -> Sil.method_annotation

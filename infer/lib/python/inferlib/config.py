@@ -14,8 +14,11 @@ import locale
 import os
 
 
-locale.setlocale(locale.LC_ALL, '')
-CODESET = locale.getlocale(locale.LC_CTYPE)[1]
+try:
+    locale.setlocale(locale.LC_ALL, '')
+    CODESET = locale.getlocale(locale.LC_CTYPE)[1]
+except:
+    CODESET = None
 if CODESET is None:
     CODESET = 'ascii'
 
@@ -31,17 +34,10 @@ LIB_DIRECTORY = os.path.join(INFER_INFER_DIRECTORY, 'lib')
 BIN_DIRECTORY = os.path.join(INFER_INFER_DIRECTORY, 'bin')
 JAVA_LIB_DIRECTORY = os.path.join(LIB_DIRECTORY, 'java')
 MODELS_JAR = os.path.join(JAVA_LIB_DIRECTORY, 'models.jar')
-ANNOT_PROCESSOR_JAR = os.path.join(JAVA_LIB_DIRECTORY, 'processor.jar')
-ANNOT_PROCESSOR_NAMES = 'com.facebook.infer.annotprocess.CollectSuppressWarnings'
 WRAPPERS_DIRECTORY = os.path.join(LIB_DIRECTORY, 'wrappers')
-XCODE_WRAPPERS_DIRECTORY = os.path.join(LIB_DIRECTORY, 'xcode_wrappers')
 
 DEFAULT_INFER_OUT = os.path.join(os.getcwd().decode(CODESET), 'infer-out')
-CSV_PERF_FILENAME = 'performances.csv'
-STATS_FILENAME = 'stats.json'
-PROC_STATS_FILENAME = 'proc_stats.json'
 
-CSV_REPORT_FILENAME = 'report.csv'
 JSON_REPORT_FILENAME = 'report.json'
 INFER_BUCK_DEPS_FILENAME = 'infer-deps.txt'
 BUGS_FILENAME = 'bugs.txt'
@@ -55,27 +51,28 @@ LOG_FILE = 'toplevel.log'
 
 BUCK_INFER_OUT = 'infer'
 
-CLASS_SOURCE_MAP_OUTPUT_FILENAME_OPTION = 'classSourceMapOutputFilename'
-SUPRESS_WARNINGS_OUTPUT_FILENAME_OPTION = 'SuppressWarningsOutputFilename'
+BUCK_OUT = 'buck-out'
 
+TRASH = '.trash'
 
-# exit value when infer finds something to report
-BUG_FOUND_ERROR_CODE = 2
+BUCK_OUT_TRASH = os.path.join(BUCK_OUT, TRASH)
+
+BUCK_OUT_GEN = os.path.join(BUCK_OUT, 'gen')
 
 
 # list of possible analyzers
 ANALYZER_INFER = 'infer'
-ANALYZER_ERADICATE = 'eradicate'
 ANALYZER_CHECKERS = 'checkers'
 ANALYZER_CAPTURE = 'capture'
 ANALYZER_COMPILE = 'compile'
-ANALYZER_TRACING = 'tracing'
+ANALYZER_CRASHCONTEXT = 'crashcontext'
+ANALYZER_LINTERS = 'linters'
 
 ANALYZERS = [
     ANALYZER_CAPTURE,
     ANALYZER_CHECKERS,
     ANALYZER_COMPILE,
-    ANALYZER_ERADICATE,
+    ANALYZER_CRASHCONTEXT,
     ANALYZER_INFER,
-    ANALYZER_TRACING,
+    ANALYZER_LINTERS,
 ]

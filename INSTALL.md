@@ -18,9 +18,12 @@ is required to be able to [use the
 release](http://fbinfer.com/docs/getting-started.html) (faster), or to
 compile everything from source (see the end of this document).
 
-- opam >= 1.2.0 (instructions [here](https://opam.ocaml.org/doc/Install.html#OSX))
+- opam 1.2.2 (instructions [here](https://opam.ocaml.org/doc/Install.html#OSX))
 - Python 2.7
+- sqlite
+- pkg-config
 - Java (only needed for the Java analysis)
+- cmake (only needed for the C/Objective-C analysis)
 - clang in Xcode command line tools. You can install them with the command
   `xcode-select --install` (only needed for the C/Objective-C analysis)
 - Xcode >= 6.1 (only needed for the C/Objective-C analysis)
@@ -30,8 +33,8 @@ You can install some of these dependencies using
 [Homebrew](http://brew.sh/):
 
 ```sh
-brew install autoconf automake opam caskroom/cask/brew-cask && \
-brew cask install caskroom/versions/java7
+brew install autoconf automake cmake opam pkg-config sqlite
+brew cask install java
 ```
 
 
@@ -42,8 +45,9 @@ is required to be able to [use the
 release](http://fbinfer.com/docs/getting-started.html) (faster), or to
 compile everything from source (see the end of this document).
 
-- opam >= 1.2.0
+- opam 1.2.2
 - Python 2.7
+- pkg-config
 - Java (only needed for the Java analysis)
 - gcc >= 4.7.2 or clang >= 3.1 (only needed for the C/Objective-C analysis)
 - autoconf >= 2.63 and automake >= 1.11.1 (if building from git)
@@ -84,10 +88,12 @@ some means other than opam, you can still compile Infer by running:
 
 ```sh
 ./autogen.sh
-./configure
-make # or make java
-# Install Infer into your PATH
+./configure # Disable Java or C/C++/ObjC analyzers with --disable-java-analyzers or --disable-c-analyzers
+make
+# Install Infer into your PATH...
 export PATH=`pwd`/infer/bin:$PATH
+# ...or, alternatively, install Infer system-wide
+sudo make install
 ```
 
 
@@ -96,7 +102,7 @@ export PATH=`pwd`/infer/bin:$PATH
 Here are instructions on how to install the dependencies needed to
 compile Infer on a few Linux distributions.
 
-### Debian 7 and Ubuntu 14.04 LTS
+### Debian 7 (Wheezy) and Ubuntu 14.04 LTS
 
 ```sh
 sudo apt-get update
@@ -109,50 +115,44 @@ sudo apt-get install -y \
   libgmp-dev \
   libmpc-dev \
   libmpfr-dev \
+  libsqlite3-dev \
   m4 \
   openjdk-7-jdk \
+  pkg-config \
   python-software-properties \
   unzip \
   zlib1g-dev
 ```
 
-### Ubuntu 12.04.4 LTS
+### Debian 8 (Jessie)
 
 ```sh
-sudo add-apt-repository ppa:ubuntu-toolchain-r/test
-sudo apt-get update
-sudo apt-get upgrade
-sudo apt-get install -y \
+sudo apt install -y \
   autoconf \
   automake \
   build-essential \
-  g++-4.8 \
-  gcc-4.8 \
   git \
   libgmp-dev \
   libmpc-dev \
   libmpfr-dev \
+  libsqlite3-dev \
   m4 \
+  opam \
   openjdk-7-jdk \
-  python-software-properties \
   unzip \
-  zlib1g-dev
-sudo update-alternatives \
-  --install /usr/bin/gcc gcc /usr/bin/gcc-4.8 60 \
-  --slave /usr/bin/g++ g++ /usr/bin/g++-4.8
+  zlib1g-dev \
+  opam \
+  rsync \
+  pkg-config \
+  libncurses-dev \
+  python \
+  aspcud
 ```
 
 ### Setting up opam
 
-Unfortunately, the version of opam that ships with some Linux
-distributions is broken, so you'll have to get it from the web:
+Get opam from your distribution, or from the
+[opam website](http://opam.ocaml.org/doc/Install.html#Binarydistribution).
 
-```sh
-wget https://github.com/ocaml/opam/releases/download/1.2.2/opam-1.2.2-x86_64-Linux
-chmod +x opam-1.2.2-x86_64-Linux
-sudo cp opam-1.2.2-x86_64-Linux /usr/local/bin/opam
-opam init --comp=4.02.3
-```
-
-Alternatively, follow the instructions [from the opam
-webpage](https://opam.ocaml.org/doc/Install.html).
+The OCaml dependencies needed by Infer are automatically handled by
+opam when running `./build-infer.sh`.

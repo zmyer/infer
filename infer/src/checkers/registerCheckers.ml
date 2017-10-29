@@ -7,54 +7,129 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *)
 
-open! Utils
+open! IStd
 
 (** Module for registering checkers. *)
 
 module L = Logging
 module F = Format
 
-(** Flags to activate checkers. *)
-let active_procedure_checkers () =
-  let checkers_enabled = Config.checkers_enabled in
+(* make sure SimpleChecker.ml is not dead code *)
+let () = if false then let module SC = SimpleChecker.Make in ()
 
-  let java_checkers =
-    let l =
-      [
-        Checkers.callback_check_access, false;
-        Checkers.callback_monitor_nullcheck, false;
-        Checkers.callback_test_state , false;
-        Checkers.callback_checkVisibleForTesting, false;
-        Checkers.callback_check_write_to_parcel, false;
-        Checkers.callback_find_deserialization, false;
-        CheckTraceCallSequence.callback_check_trace_call_sequence, false;
-        Dataflow.callback_test_dataflow, false;
-        FragmentRetainsViewChecker.callback_fragment_retains_view, checkers_enabled;
-        SqlChecker.callback_sql, false;
-        Eradicate.callback_eradicate, Config.eradicate;
-        CodeQuery.code_query_callback, Config.code_query <> None;
-        Checkers.callback_check_field_access, false;
-        ImmutableChecker.callback_check_immutable_cast, checkers_enabled;
-        RepeatedCallsChecker.callback_check_repeated_calls, checkers_enabled;
-        PrintfArgs.callback_printf_args, checkers_enabled;
-        AnnotationReachability.Interprocedural.check_and_report, checkers_enabled;
-      ] in
-    IList.map (fun (x, y) -> (x, y, Some Config.Java)) l in
-  let c_cpp_checkers =
-    let l =
-      [
-        Checkers.callback_print_c_method_calls, false;
-        CheckDeadCode.callback_check_dead_code, checkers_enabled;
-      ] in
-    IList.map (fun (x, y) -> (x, y, Some Config.Clang)) l in
+type callback_fun =
+  | Procedure of Callbacks.proc_callback_t
+  | DynamicDispatch of Callbacks.proc_callback_t
+  | Cluster of Callbacks.cluster_callback_t
 
-  java_checkers @ c_cpp_checkers
+type callback = callback_fun * Config.language
 
-let active_cluster_checkers () =
-  [(Checkers.callback_check_cluster_access, false, Some Config.Java)]
+type checker = {name: string; active: bool; callbacks: callback list}
 
-let register () =
-  let register registry (callback, active, language_opt) =
-    if active then registry language_opt callback in
-  IList.iter (register Callbacks.register_procedure_callback) (active_procedure_checkers ());
-  IList.iter (register Callbacks.register_cluster_callback) (active_cluster_checkers ())
+let all_checkers =
+  [ { name= "annotation reachability"
+    ; active= Config.annotation_reachability
+    ; callbacks= [(Procedure AnnotationReachability.checker, Config.Java)] }
+  ; { name= "biabduction"
+    ; active= Config.biabduction
+    ; callbacks=
+        [ (Procedure Interproc.analyze_procedure, Config.Clang)
+        ; (DynamicDispatch Interproc.analyze_procedure, Config.Java) ] }
+  ; { name= "buffer overrun"
+    ; active= Config.bufferoverrun
+    ; callbacks=
+        [ (Procedure BufferOverrunChecker.checker, Config.Clang)
+        ; (Procedure BufferOverrunChecker.checker, Config.Java) ] }
+  ; { name= "crashcontext"
+    ; active= Config.crashcontext
+    ; callbacks= [(Procedure BoundedCallTree.checker, Config.Java)] }
+  ; { name= "eradicate"
+    ; active= Config.eradicate
+    ; callbacks= [(Procedure Eradicate.callback_eradicate, Config.Java)] }
+  ; { name= "fragment retains view"
+    ; active= Config.fragment_retains_view
+    ; callbacks=
+        [(Procedure FragmentRetainsViewChecker.callback_fragment_retains_view, Config.Java)] }
+  ; { name= "immutable cast"
+    ; active= Config.immutable_cast
+    ; callbacks= [(Procedure ImmutableChecker.callback_check_immutable_cast, Config.Java)] }
+  ; { name= "liveness"
+    ; active= Config.liveness
+    ; callbacks= [(Procedure Liveness.checker, Config.Clang)] }
+  ; { name= "printf args"
+    ; active= Config.printf_args
+    ; callbacks= [(Procedure PrintfArgs.callback_printf_args, Config.Java)] }
+  ; { name= "nullable checks"
+    ; active= Config.check_nullable
+    ; callbacks= [(Procedure NullabilityCheck.checker, Config.Clang)] }
+  ; { name= "nullable suggestion"
+    ; active= Config.suggest_nullable
+    ; callbacks=
+        [ (Procedure NullabilitySuggest.checker, Config.Java)
+        ; (Procedure NullabilitySuggest.checker, Config.Clang) ] }
+  ; { name= "quandary"
+    ; active= Config.quandary
+    ; callbacks=
+        [ (Procedure JavaTaintAnalysis.checker, Config.Java)
+        ; (Procedure ClangTaintAnalysis.checker, Config.Clang) ] }
+  ; { name= "RacerD"
+    ; active= Config.racerd
+    ; callbacks=
+        [ (Procedure RacerD.analyze_procedure, Config.Clang)
+        ; (Procedure RacerD.analyze_procedure, Config.Java)
+        ; (Cluster RacerD.file_analysis, Config.Clang)
+        ; (Cluster RacerD.file_analysis, Config.Java) ] }
+  ; { name= "repeated calls"
+    ; active= Config.repeated_calls
+    ; callbacks= [(Procedure RepeatedCallsChecker.callback_check_repeated_calls, Config.Java)] }
+    (* toy resource analysis to use in the infer lab, see the lab/ directory *)
+  ; { name= "resource leak"
+    ; active= Config.resource_leak
+    ; callbacks=
+        [ ( (* the checked-in version is intraprocedural, but the lab asks to make it
+               interprocedural later on *)
+            Procedure ResourceLeaks.checker
+          , Config.Java ) ] }
+  ; {name= "SIOF"; active= Config.siof; callbacks= [(Procedure Siof.checker, Config.Clang)]}
+  ; { name= "uninitialized variables"
+    ; active= Config.uninit
+    ; callbacks= [(Procedure Uninit.checker, Config.Clang)] } ]
+
+
+let get_active_checkers () =
+  let filter_checker {active} = active in
+  List.filter ~f:filter_checker all_checkers
+
+
+let register checkers =
+  let register_one {callbacks} =
+    let register_callback (callback, language) =
+      match callback with
+      | Procedure procedure_cb ->
+          Callbacks.register_procedure_callback language procedure_cb
+      | DynamicDispatch procedure_cb ->
+          Callbacks.register_procedure_callback ~dynamic_dispath:true language procedure_cb
+      | Cluster cluster_cb ->
+          Callbacks.register_cluster_callback language cluster_cb
+    in
+    List.iter ~f:register_callback callbacks
+  in
+  List.iter ~f:register_one checkers
+
+
+module LanguageSet = Caml.Set.Make (struct
+  type t = Config.language
+
+  let compare = Config.compare_language
+end)
+
+let pp_checker fmt {name; callbacks} =
+  let langs_of_callbacks =
+    List.fold_left callbacks ~init:LanguageSet.empty ~f:(fun langs (_, lang) ->
+        LanguageSet.add lang langs )
+    |> LanguageSet.elements
+  in
+  F.fprintf fmt "%s (%a)" name
+    (Pp.seq ~sep:", " (Pp.to_string ~f:Config.string_of_language))
+    langs_of_callbacks
+

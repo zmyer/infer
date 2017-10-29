@@ -7,36 +7,34 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *)
 
-open! Utils
+open! IStd
 
 (** Module for builtin functions with their symbolic execution handler *)
 
-type args = {
-  pdesc : Cfg.Procdesc.t;
-  instr : Sil.instr;
-  tenv : Tenv.t;
-  prop_ : Prop.normal Prop.t;
-  path : Paths.Path.t;
-  ret_ids : Ident.t list;
-  args : (Sil.exp * Sil.typ) list;
-  proc_name : Procname.t;
-  loc : Location.t;
-}
+type args =
+  { pdesc: Procdesc.t
+  ; instr: Sil.instr
+  ; tenv: Tenv.t
+  ; prop_: Prop.normal Prop.t
+  ; path: Paths.Path.t
+  ; ret_id: (Ident.t * Typ.t) option
+  ; args: (Exp.t * Typ.t) list
+  ; proc_name: Typ.Procname.t
+  ; loc: Location.t }
 
 type ret_typ = (Prop.normal Prop.t * Paths.Path.t) list
 
 type t = args -> ret_typ
 
-val register : string -> t -> Procname.t
-(** Register a builtin function name and symbolic execution handler *)
+type registered
 
-val register_procname : Procname.t -> t -> unit
-(** Register a builtin [Procname.t] and symbolic execution handler *)
+val register : Typ.Procname.t -> t -> registered
+(** Register a builtin [Typ.Procname.t] and symbolic execution handler *)
 
-val is_registered : Procname.t -> bool
+val is_registered : Typ.Procname.t -> bool
 (** Check if the function is a builtin *)
 
-val get : Procname.t -> t
+val get : Typ.Procname.t -> t option
 (** Get the symbolic execution handler associated to the builtin function name *)
 
 val print_and_exit : unit -> 'a

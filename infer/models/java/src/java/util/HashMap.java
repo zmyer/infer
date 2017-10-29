@@ -10,7 +10,8 @@
 package java.util;
 import java.io.*;
 
-import com.facebook.infer.models.InferUndefined;
+import com.facebook.infer.builtins.InferUndefined;
+import com.facebook.infer.builtins.InferBuiltins;
 
 /**
  * A recency abstraction for hashmaps that remembers only the last two
@@ -24,16 +25,15 @@ import com.facebook.infer.models.InferUndefined;
  * get(key).
 */
 
-public abstract class HashMap<K,V> extends AbstractMap<K,V>
-  implements Map<K,V>, Cloneable, Serializable {
+public abstract class HashMap<K,V> {
 
-  private Object lastKey1 = null;
-  private Object lastKey2 = null;
+  private K lastKey1 = null;
+  private K lastKey2 = null;
+  private boolean containsResources = false;
 
-  public boolean containsKey(Object key) {
+  public boolean containsKey(K key) {
     // doesn't actually check if _containsKey(key). If you just put a
     // key in the map, why would you check if it's still there?
-
     if (InferUndefined.boolean_undefined()) {
       pushKey(key);
       return true;
@@ -42,7 +42,7 @@ public abstract class HashMap<K,V> extends AbstractMap<K,V>
     }
   }
 
-  public V get(Object key) {
+  public V get(K key) {
     if (_containsKey(key)) {
       return (V)InferUndefined.object_undefined();
     } else if (InferUndefined.boolean_undefined()) {
@@ -54,6 +54,12 @@ public abstract class HashMap<K,V> extends AbstractMap<K,V>
   }
 
   public V put(K key, V value) {
+    if (value instanceof Closeable) {
+      // Transfer the resource ownership to the container
+      InferBuiltins.__set_mem_attribute(value);
+      InferBuiltins.__set_file_attribute(this);
+      containsResources = true;
+    }
     pushKey(key);
 
     if (InferUndefined.boolean_undefined()) {
@@ -62,21 +68,42 @@ public abstract class HashMap<K,V> extends AbstractMap<K,V>
     return null;
   }
 
+  public V remove(K key) {
+    V value = get(key);
+    removeKey(key);
+    return value;
+  }
+
+  public void clear() {
+    lastKey1 = null;
+    lastKey2 = null;
+    if (containsResources) {
+      InferBuiltins.__set_mem_attribute(this);
+    }
+    containsResources = false;
+  }
 
   /** some sort of circular buffer simulator */
-  private void pushKey(Object key) {
+  private void pushKey(K key) {
     lastKey2 = lastKey1;
     lastKey1 = key;
   }
 
-  private boolean _containsKey(Object key) {
+  private boolean _containsKey(K key) {
       return areEqual(key, lastKey1) || areEqual(key, lastKey2);
   }
 
-  /* does explicit dynamic dispatch to help Infer out */
-  private static boolean areEqual(Object x, Object y) {
-      return x == y
-          || (x instanceof Integer && ((Integer) x).equals(y));
+  private void removeKey(K key) {
+    if (areEqual(key, lastKey1)) {
+      lastKey1 = null;
+    }
+    if (areEqual(key, lastKey2)) {
+      lastKey2 = null;
+    }
+  }
+
+  private boolean areEqual(K x, K y) {
+    return x == y;
   }
 
 }

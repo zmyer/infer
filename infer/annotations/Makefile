@@ -10,30 +10,24 @@ include $(ROOT_DIR)/Makefile.config
 
 CWD = $(shell pwd)
 JSR_JAR = $(DEPENDENCIES_DIR)/java/jsr-305/jsr305.jar
-ANNOT_SOURCES = $(shell find com/facebook/infer/annotation -name "*.java")
-PROCESSOR_SOURCES = $(shell find com/facebook/infer/annotprocess -name "*.java")
+SOURCES_DIR = src/main/java
+ANNOT_SOURCES = $(shell find $(SOURCES_DIR)/com/facebook/infer/annotation -name "*.java")
 ANNOT_CLASSES = 'annot_classes'
-PROCESSOR_CLASSES = 'processor_classes'
-TARGET_JDK_VERSION = '1.7'
 
 ANNOTATIONS_JAR = $(CWD)/annotations.jar
-PROCESSOR_JAR = $(JAVA_LIB_DIR)/processor.jar
+SOURCES_JAR = $(CWD)/annotations-src.jar
 
-all: $(ANNOTATIONS_JAR) $(PROCESSOR_JAR)
+all: $(ANNOTATIONS_JAR) $(SOURCES_JAR)
 
 $(ANNOTATIONS_JAR): $(ANNOT_SOURCES)
-	mkdir -p $(ANNOT_CLASSES)
-	javac -source $(TARGET_JDK_VERSION) -target $(TARGET_JDK_VERSION) -cp $(JSR_JAR) $(ANNOT_SOURCES) -d $(ANNOT_CLASSES)
+	$(MKDIR_P) $(ANNOT_CLASSES)
+	$(JAVAC) -source 7 -target 7 -cp $(JSR_JAR) $(ANNOT_SOURCES) -d $(ANNOT_CLASSES)
 	cd $(ANNOT_CLASSES) && jar cvf $(ANNOTATIONS_JAR) com
 
-$(PROCESSOR_JAR): $(PROCESSOR_SOURCES)
-	mkdir -p $(PROCESSOR_CLASSES)
-	javac -source $(TARGET_JDK_VERSION) -target $(TARGET_JDK_VERSION) $(PROCESSOR_SOURCES) -cp .:$(JAVA_HOME)/lib/tools.jar -d $(PROCESSOR_CLASSES)
-	jar cvMf processor.jar -C resources META-INF -C $(PROCESSOR_CLASSES) com
-	mv processor.jar $(PROCESSOR_JAR)
+$(SOURCES_JAR): $(ANNOT_SOURCES)
+	jar cvf $(SOURCES_JAR) $(SOURCES_DIR)/com
 
 clean:
-	@rm -rf $(ANNOT_CLASSES)
-	@rm -f $(ANNOTATIONS_JAR)
-	@rm -rf $(PROCESSOR_CLASSES)
-	@rm -f $(PROCESSOR_JAR)
+	$(QUIET)$(REMOVE_DIR) $(ANNOT_CLASSES)
+	$(QUIET)$(REMOVE) $(ANNOTATIONS_JAR)
+	$(QUIET)$(REMOVE) $(SOURCES_JAR)

@@ -7,20 +7,20 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *)
 
-open! Utils
+open! IStd
 
 (** Environment for temporary identifiers used in instructions.
     Lazy implementation: only created when actually used. *)
 
-
 type t
 
-val create : Cfg.Procdesc.t -> t
-val create_from_idenv : t -> Cfg.Procdesc.t -> t
-val lookup : t -> Ident.t -> Sil.exp option
-val expand_expr : t -> Sil.exp -> Sil.exp
+val create : Procdesc.t -> t
 
-val exp_is_temp : t -> Sil.exp -> bool
+val lookup : t -> Ident.t -> Exp.t option
 
+val expand_expr : t -> Exp.t -> Exp.t
+
+val exp_is_temp : t -> Exp.t -> bool
+
+val expand_expr_temps : t -> Procdesc.Node.t -> Exp.t -> Exp.t
 (** Stronger version of expand_expr which also expands a temporary variable. *)
-val expand_expr_temps : t -> Cfg.Node.t -> Sil.exp -> Sil.exp

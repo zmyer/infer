@@ -7,95 +7,45 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *)
 
-open! Utils
+open! IStd
 
-(** Module that contains constants and variables used in the frontend *)
+(** Module that contains constants and global state used in the frontend *)
 
-val global_translation_unit_decls : Clang_ast_t.decl list ref
+exception IncorrectAssumption of string
 
-(** constants *)
+val incorrect_assumption : ('a, Format.formatter, unit, _) format4 -> 'a
+(** Used to mark places in the frontend that incorrectly assume something to be
+    impossible. TODO(t21762295) get rid of all instances of this. *)
 
-val json : string ref
+exception Unimplemented of string
 
-val pointer_decl_index : Clang_ast_t.decl Clang_ast_main.PointerMap.t ref
+val unimplemented : ('a, Format.formatter, unit, _) format4 -> 'a
+(** Raise Unimplemented. This is caught at the level of translating a method and makes the frontend
+    give up on that method. *)
 
-val pointer_stmt_index : Clang_ast_t.stmt Clang_ast_main.PointerMap.t ref
+type clang_lang = C | CPP | ObjC | ObjCPP [@@deriving compare]
 
-val objc_object : string
+val equal_clang_lang : clang_lang -> clang_lang -> bool
 
-val id_cl : string
+type translation_unit_context = {lang: clang_lang; source_file: SourceFile.t}
 
-val self : string
-
-val this : string
-
-val return_param : string
-
-val nsstring_cl : string
-
-val nsobject_cl : string
-
-val next_object : string
-
-val nsautorelease_pool_cl : string
-
-val string_with_utf8_m : string
-
-val is_kind_of_class : string
+(** Constants *)
 
 val alloc : string
 
-val malloc : string
-
-val free : string
-
-val static : string
-
 val array_with_objects_count_m : string
 
-val object_at_indexed_subscript_m : string
+val assert_fail : string
 
-val emtpy_name_category : string
+val assert_rtn : string
 
-val objc_class : string
-
-val class_type : string
-
-val retain : string
-
-val release : string
-
-val drain : string
+val atomic_att : string
 
 val autorelease : string
 
-val copy : string
+val biniou_buffer_size : int
 
-val mutableCopy : string
-
-val new_str : string
-
-val init : string
-
-val temp_var : string
-
-val invalid_pointer : int
-
-val void : string
-
-val class_method : string
-
-val cf_non_null_alloc : string
-
-val cf_alloc : string
-
-val cf_bridging_release : string
-
-val cf_bridging_retain : string
-
-val cf_autorelease : string
-
-val ns_make_collectable : string
+val block : string
 
 val builtin_expect : string
 
@@ -103,49 +53,128 @@ val builtin_memset_chk : string
 
 val builtin_object_size : string
 
+val cf_alloc : string
+
+val cf_autorelease : string
+
+val cf_bridging_release : string
+
+val cf_bridging_retain : string
+
+val cf_non_null_alloc : string
+
+val ckcomponent_cl : string
+
+val ckcomponentcontroller_cl : string
+
+val clang_bin : string -> string
+(** Script to run our own clang. The argument is expected to be either "" or "++". *)
+
+val class_method : string
+
+val class_type : string
+
+val copy : string
+
+val count : string
+
+val drain : string
+
+val emtpy_name_category : string
+
+val enumerateObjectsUsingBlock : string
+
 val fbAssertWithSignalAndLogFunctionHelper : string
 
-val assert_fail : string
-
-val assert_rtn : string
-
-val handleFailureInMethod : string
-
-val handleFailureInFunction : string
+val free : string
 
 val google_LogMessageFatal : string
 
 val google_MakeCheckOpString : string
 
-val google_whitelisting_functions : string list
+val handleFailureInFunction : string
 
-val pseudo_object_type : string
+val handleFailureInMethod : string
 
-val count : string
-
-val objects : string
-
-val enumerateObjectsUsingBlock : string
-
-(** Map from clang pointers to types produced by ast exporter.
-    Populated once on InferClang startup *)
-val pointer_type_index : Clang_ast_t.c_type Clang_ast_main.PointerMap.t ref
-
-(** Map from type pointers (clang pointers and types created later by frontend) to sil types
-    Populated during frontend execution when new type is found *)
-val sil_types_map : (Sil.typ Clang_ast_types.TypePointerMap.t) ref
-
-(** Map from enum constants pointers to their predecesor and their sil value *)
-val enum_map : (Clang_ast_t.pointer option * Sil.exp option) Clang_ast_main.PointerMap.t ref
-
-val nsarray_cl : string
+val id_cl : string
 
 val infer : string
 
-val block : string
-
-val atomic_att : string
-
-val infer_skip_gcc_ast_stmt : string
-
 val infer_skip_fun : string
+
+val infer_skip_gcc_asm_stmt : string
+
+val init : string
+
+val invalid_pointer : int
+
+val is_kind_of_class : string
+
+val malloc : string
+
+val mutableCopy : string
+
+val new_str : string
+
+val next_object : string
+
+val ns_make_collectable : string
+
+val nsarray_cl : string
+
+val nsautorelease_pool_cl : string
+
+val nsproxy_cl : string
+
+val nsobject_cl : string
+
+val nsstring_cl : string
+
+val objc_class : string
+
+val objc_object : string
+
+val object_at_indexed_subscript_m : string
+
+val objects : string
+
+val pseudo_object_type : string
+
+val release : string
+
+val retain : string
+
+val return_param : string
+
+val self : string
+
+val static : string
+
+val std_addressof : QualifiedCppName.Match.quals_matcher
+
+val string_with_utf8_m : string
+
+val this : string
+
+val void : string
+
+val replace_with_deref_first_arg_attr : string
+
+val modeled_function_attributes : string list
+
+(** Global state *)
+
+val enum_map : (Clang_ast_t.pointer option * Exp.t option) ClangPointers.Map.t ref
+(** Map from enum constants pointers to their predecesor and their sil value *)
+
+val global_translation_unit_decls : Clang_ast_t.decl list ref
+
+val log_out : Format.formatter ref
+
+val sil_types_map : Typ.desc Clang_ast_extend.TypePointerMap.t ref
+(** Map from type pointers (clang pointers and types created later by frontend) to sil types
+    Populated during frontend execution when new type is found *)
+
+val reset_global_state : unit -> unit
+
+val tableaux_evaluation : bool
